@@ -41,6 +41,7 @@ def load_hete_graph_data(dataset_name, device, data_dir='/data'):
             graph.num_nodes, graph.num_edges, num_classes))
 
         return graph, num_classes, train_mask, val_mask, test_mask, y
+
     else:
         logging.info("Dataset not found.")
         return None

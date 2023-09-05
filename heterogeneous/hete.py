@@ -4,10 +4,25 @@ import logging
 from tqdm import tqdm
 
 
-@torch.no_grad()
+@torch.no_grad()  # Decorator to disable gradient calculation during inference
 def test(model, graph, y, mask, test_mask, device):
-    model.eval()
-    with torch.no_grad():
+    """
+    Evaluate the model on a test set.
+
+    Parameters:
+    - model: The PyTorch model to evaluate.
+    - graph: The graph data.
+    - y: The ground truth labels.
+    - mask: The mask to apply on the labels.
+    - test_mask: The mask for the test set.
+    - device: The device to run the model on (CPU or GPU).
+
+    Returns:
+    - float: The accuracy of the model on the test set.
+    - float: The loss on the test set.
+    """
+    model.eval()  # Set the model to evaluation mode
+    with torch.no_grad():  # Context manager to disable gradient calculation
         out = model(graph)
         loss_function = torch.nn.CrossEntropyLoss().to(device)
         loss = loss_function(out[mask], y[mask])
@@ -20,10 +35,27 @@ def test(model, graph, y, mask, test_mask, device):
 
 
 def train(model, graph, y, train_mask, val_mask, test_mask, epochs, device):
+    """
+    Train the model.
+
+    Parameters:
+    - model: The PyTorch model to train.
+    - graph: The graph data.
+    - y: The ground truth labels.
+    - train_mask: The mask for the training set.
+    - val_mask: The mask for the validation set.
+    - test_mask: The mask for the test set.
+    - epochs: The number of epochs to train for.
+    - device: The device to run the model on (CPU or GPU).
+
+    Returns:
+    - float: The best accuracy achieved on the test set.
+    """
     logging.info("model is %s" % model)
     optimizer = torch.optim.Adam(
-        model.parameters(), lr=0.01, weight_decay=1e-4)
-    loss_function = torch.nn.CrossEntropyLoss().to(device)
+        model.parameters(), lr=0.01, weight_decay=1e-4)  # Initialize optimizer
+    loss_function = torch.nn.CrossEntropyLoss().to(
+        device)  # Initialize loss function
     min_epochs = 5
     best_val_acc = 0
     final_best_acc = 0
