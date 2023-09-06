@@ -35,8 +35,9 @@ def train(model, graph, y, train_mask, val_mask, test_mask, epochs, device):
         loss.backward()
         optimizer.step()
 
-        val_acc, val_loss = test(model, val_mask)
-        test_acc, test_loss = test(model, test_mask)
+        val_acc, _val_loss = test(model, graph, y, val_mask, test_mask, device)
+        test_acc, _test_loss = test(
+            model, graph, y, test_mask, test_mask, device)
         if epoch + 1 > min_epochs and val_acc > best_val_acc:
             best_val_acc = val_acc
             final_best_acc = test_acc
@@ -44,4 +45,3 @@ def train(model, graph, y, train_mask, val_mask, test_mask, epochs, device):
             epoch, loss.item(), val_acc, test_acc))
 
     return final_best_acc
-

@@ -26,7 +26,7 @@ def load_hete_graph_data(dataset_name, device, data_dir='/data'):
     if dataset_name == 'DBLP':
         from torch_geometric.datasets import DBLP
 
-        print("data path = %s" % path)
+        logging.info("data path = %s" % path)
 
         dataset = DBLP(path)
         graph = dataset[0]
