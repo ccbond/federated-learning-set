@@ -3,7 +3,7 @@ import torch
 import logging
 
 
-def load_hete_graph_data(dataset_name, device, data_dir='./data'):
+def load_hete_graph_data(dataset_name, device, data_dir='/data'):
     """
     Load the heterogeneous graph data.
 
@@ -21,10 +21,12 @@ def load_hete_graph_data(dataset_name, device, data_dir='./data'):
     - Tensor: Labels.
     """
 
-    path = os.path.abspath(os.path.dirname(os.getcwd()) + data_dir)
+    path = os.path.abspath(os.getcwd() + data_dir)
 
     if dataset_name == 'DBLP':
         from torch_geometric.datasets import DBLP
+
+        print("data path = %s" % path)
 
         dataset = DBLP(path)
         graph = dataset[0]
@@ -39,3 +41,6 @@ def load_hete_graph_data(dataset_name, device, data_dir='./data'):
             graph.num_nodes, graph.num_edges, num_classes))
 
         return graph, num_classes, train_mask, val_mask, test_mask, y
+    else:
+        logging.info("Dataset not found.")
+        return None

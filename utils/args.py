@@ -41,7 +41,7 @@ def args_parser():
     # other arguments
     parser.add_argument('--model', type=str, default='han', help='model name')
     parser.add_argument('--dataset', type=str,
-                        default='mnist', help="name of dataset")
+                        default='DBLP', help="name of dataset")
     parser.add_argument('--epochs', type=int, default=100,
                         help="rounds of training")
     # parser.add_argument('--iid', action='store_true',
@@ -61,3 +61,6 @@ def args_parser():
     #                     help='aggregation over all clients')
     args = parser.parse_args()
     return args
+
+
+args = args_parser()
