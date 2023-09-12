@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 logging.basicConfig(level=logging.INFO)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-path = os.path.abspath(os.path.dirname(os.getcwd()) + '../data')
+path = os.path.abspath(os.path.dirname(os.getcwd()) + '/data')
 dataset = DBLP(path, transform=None, pre_transform=None)
 graph = dataset[0]
 num_classes = torch.max(graph['author'].y).item() + 1
