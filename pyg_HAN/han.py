@@ -27,7 +27,7 @@ class HAN(nn.Module):
                              graph.metadata(), heads=4)
 
     def forward(self, data):
-        x_dict, edge_index_dict = data['author'].x, data.edge_index_dict
+        x_dict, edge_index_dict = data.x_dict, data.edge_index_dict
         x = self.conv1(x_dict, edge_index_dict)
         x = self.conv2(x, edge_index_dict)
         x = x['author']
