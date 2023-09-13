@@ -51,7 +51,6 @@ def train(model, graph, y, train_mask, val_mask, test_mask, epochs, device):
     Returns:
     - float: The best accuracy achieved on the test set.
     """
-    logging.info("model is %s" % model)
     optimizer = torch.optim.Adam(
         model.parameters(), lr=0.01, weight_decay=1e-4)  # Initialize optimizer
     loss_function = torch.nn.CrossEntropyLoss().to(

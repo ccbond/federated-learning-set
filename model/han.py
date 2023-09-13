@@ -19,9 +19,9 @@ class HAN(nn.Module):
         """
         super(HAN, self).__init__()
         self.conv1 = HANConv(in_channels, hidden_channels,
-                             graph.metadata(), heads=4)
+                             graph.metadata(), heads=1)
         self.conv2 = HANConv(hidden_channels, out_channels,
-                             graph.metadata(), heads=4)
+                             graph.metadata(), heads=1)
 
     def forward(self, data):
         """
