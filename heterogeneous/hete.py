@@ -1,6 +1,9 @@
 import os
 import torch
 import logging
+import bz2
+import pickle
+
 from tqdm import tqdm
 
 
@@ -74,5 +77,11 @@ def train(model, graph, y, train_mask, val_mask, test_mask, epochs, device):
             final_best_acc = test_acc
         tqdm.write('epoch: {:03d}, train_loss: {:.5f}, val_acc: {:.3f}, test_acc {:.3f}'.format(
             epoch, loss.item(), val_acc, test_acc))
-
+        
+        state_dict = model.state_dict()
+        compressed = bz2.compress(pickle.dumps(state_dict))
+        logging.info('HAN compressed parameters:')
+        print(compressed)
+        print(type(compressed))
+        return
     return final_best_acc
