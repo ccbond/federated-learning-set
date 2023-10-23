@@ -1,4 +1,3 @@
-import logging
 from torch import nn
 from torch_geometric.nn import HANConv
 
@@ -35,8 +34,8 @@ class HAN(nn.Module):
         - Tensor: Output data.
         """
         x_dict, edge_index_dict = data.x_dict, data.edge_index_dict
-        logging.info(f"x_dict: {x_dict}")
-        logging.info(f"edge_index_dict: {edge_index_dict}")
+        # logging.info(f"x_dict: {x_dict}")
+        # logging.info(f"edge_index_dict: {edge_index_dict}")
         x = self.conv1(x_dict, edge_index_dict)
         x = self.conv2(x, edge_index_dict)
         x = x['author']

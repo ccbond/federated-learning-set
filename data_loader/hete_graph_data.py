@@ -30,6 +30,9 @@ def load_hete_graph_data(dataset_name, device, data_dir='/data'):
 
         dataset = DBLP(path)
         graph = dataset[0]
+
+        logging.info("DBLP graph node list: %s" % dataset.node_types())
+
         num_classes = torch.max(graph['author'].y).item() + 1
         graph['conference'].x = torch.ones((graph['conference'].num_nodes, 1))
         graph = graph.to(device)
@@ -45,3 +48,16 @@ def load_hete_graph_data(dataset_name, device, data_dir='/data'):
     else:
         logging.info("Dataset not found.")
         return None
+
+def load_fed_hete_graph_data(dataset_name, device, data_dir='/data'):
+    path = os.path.abspath(os.getcwd() + data_dir)
+
+    if dataset_name == 'DBLP':
+        from torch_geometric.datasets import DBLP
+
+        logging.info("data path = %s" %path)
+        dataset = DBLP(path)
+        graph = dataset[0]
+        
+        #sub graph
+        # author_nums = 
