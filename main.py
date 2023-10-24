@@ -14,18 +14,19 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     if args.train_type == 'fed':
+        logging.info("1. Start load fed-heterogeneous-graph data.")
+
         # result = load
-        load_fed_hete_graph_data(args.dataset, device)
-    else: 
-        # load data
+        # load_fed_hete_graph_data(args.dataset, device)
+
+    else:
+        logging.info("1. Start load heterogeneous-graph data.")
         result = load_hete_graph_data(args.dataset, device)
         if result is not None:
             graph, num_classes, train_mask, val_mask, test_mask, y = result
 
             # load model
             model = init_model(num_classes, graph, device)
-
-            
 
             # # train model
             # final_best_acc = train(model, graph, y, train_mask,
