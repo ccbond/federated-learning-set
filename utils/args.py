@@ -44,7 +44,7 @@ def args_parser():
                         default='DBLP', help="name of dataset")
     parser.add_argument('--epochs', type=int, default=100,
                         help="rounds of training")
-    parser.add_argument('--train_type', type=str, default='no-fed')
+    parser.add_argument('--train_type', type=str, default='fed')
     parser.add_argument('--client_nums', type=int, default='4')
     # parser.add_argument('--iid', action='store_true',
     #                     help='whether i.i.d or not')
