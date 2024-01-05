@@ -19,15 +19,16 @@ class SemanticAttention(nn.Module):
             nn.Linear(hidden_size, 1, bias=False),
         )
 
-    def get_self_weight(self, features):
-        return self.project(features).mean(0)
+    def get_self_weight(self, semantic_embedding):
+        return self.project(semantic_embedding).mean(0)
 
     def forward(self, semantic_embedding, w):
         if w is None:
             w = self.get_self_weight(self, semantic_embedding)
 
         beta = torch.softmax(w, dim=0)  # (M, 1)
-        beta = beta.expand((semantic_embedding.shape[0],) + beta.shape)  # (N, M, 1)
+        beta = beta.expand(
+            (semantic_embedding.shape[0],) + beta.shape)  # (N, M, 1)
 
         return (beta * semantic_embedding).sum(1)  # (N, D * K)
 
@@ -95,16 +96,19 @@ class HANLayer(nn.Module):
 
         for i, meta_path in enumerate(self.meta_paths):
             new_g = self._cached_coalesced_graph[meta_path]
-            semantic_embeddings.append(self.gat_layers[i](new_g, features).flatten(1))
+            semantic_embeddings.append(
+                self.gat_layers[i](new_g, features).flatten(1))
         semantic_embeddings = torch.stack(
             semantic_embeddings, dim=1
         )  # (N, M, D * K)
 
         return semantic_embeddings
-    
+
     def forward(self, graph, features, weight):
-        semantic_embeddings = self.get_semantic_embeddings(self, graph, features)
-        return self.semantic_attention(semantic_embeddings, weight)  # (N, D * K)
+        semantic_embeddings = self.get_semantic_embeddings(
+            self, graph, features)
+        # (N, D * K)
+        return self.semantic_attention(semantic_embeddings, weight)
 
     def get_semantic_attention_weight(self, g, h):
         semantic_embeddings = self.get_semantic_embeddings(self, g, h)

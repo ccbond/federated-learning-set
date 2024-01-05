@@ -83,12 +83,13 @@ def load_fed_hete_graph_data(dataset_name, device, data_dir='/data/DBLP'):
                 paper_subgraph_indexs.append(
                     paper_nodes_indexs[i * paper_quarter_length: len(paper_nodes_indexs)])
 
-        subgraph_list = []
-        num_classes_list = []
-        train_mask_list = []
-        test_mask_list = []
-        val_mask_list = []
-        y_list = []
+        subgraphs = []
+        num_classes = []
+        train_masks = []
+        test_masks = []
+        val_masks = []
+        y = []
+        features = []
 
         for i in range(args.client_nums):
             sub_graph = graph.subgraph({
@@ -96,22 +97,25 @@ def load_fed_hete_graph_data(dataset_name, device, data_dir='/data/DBLP'):
                 'paper': torch.tensor(paper_subgraph_indexs[i], dtype=torch.long)
             })
 
-            num_classes = torch.max(sub_graph['author'].y).item() + 1
-            sub_graph['conference'].x = torch.ones((sub_graph['conference'].num_nodes, 1))
+            num_class = torch.max(sub_graph['author'].y).item() + 1
+            sub_graph['conference'].x = torch.ones(
+                (sub_graph['conference'].num_nodes, 1))
             sub_graph = sub_graph.to(device)
-            subgraph_list.append(sub_graph)
-            train_mask, val_mask, test_mask = sub_graph['author'].train_mask, sub_graph['author'].val_mask, sub_graph['author'].test_mask
-            y = sub_graph['author'].y
-            num_classes_list.append(num_classes)
-            train_mask_list.append(train_mask)
-            val_mask_list.append(val_mask)
-            test_mask_list.append(test_mask)
-            y_list.append(y)
-            
+            subgraphs.append(sub_graph)
+            train_mask, val_mask, test_mask = sub_graph['author'].train_mask, sub_graph[
+                'author'].val_mask, sub_graph['author'].test_mask
+            sub_y = sub_graph['author'].y
+            features = sub_graph['author'].x
+            num_classes.append(num_class)
+            train_masks.append(train_mask)
+            val_masks.append(val_mask)
+            test_masks.append(test_mask)
+            y.append(sub_y)
+            features.append(features)
 
-        logging.info("Loading Sub graphs succeed! \n %s" % subgraph_list)
+        logging.info("Loading Sub graphs succeed! \n %s" % subgraphs)
 
-        return subgraph_list, num_classes_list, train_mask_list, test_mask_list, val_mask_list, y_list
+        return subgraphs, num_classes, train_masks, test_masks, val_masks, y, features
 
     else:
         logging.info('Dataset not found.')
