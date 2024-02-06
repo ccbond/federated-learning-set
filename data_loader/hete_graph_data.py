@@ -1,8 +1,17 @@
+import os.path as osp
 import os
 import random
-import torch
 import logging
 from utils.args import args
+from typing import Dict, List, Union
+
+import torch
+import torch.nn.functional as F
+from torch import nn
+
+import torch_geometric.transforms as T
+from torch_geometric.datasets import DBLP, AMiner, OGB_MAG, MovieLens, IMDB, Taobao, AmazonBook
+from torch_geometric.nn import HANConv
 
 
 def load_hete_graph_data(dataset_name, device, data_dir='/data/DBLP'):
@@ -120,3 +129,62 @@ def load_fed_hete_graph_data(dataset_name, device, data_dir='/data/DBLP'):
     else:
         logging.info('Dataset not found.')
         return None
+
+
+all_datasets = ["DBLP", "IMDB", "Aminer", ""]
+
+def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnected_node_types: bool): 
+    if data_name == "DBLP":
+        path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/DBLP')
+        metapaths = [[("paper", "conference"), ("conference", "paper")],
+                     [("author", "paper"), ("paper", "conference")]]
+        transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
+                                drop_unconnected_node_types=drop_unconnected_node_types)
+        dataset = DBLP(path, transform=transform)
+        data = dataset[0]
+        return data
+    elif data_name == "IMDB":
+        path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/IMDB')
+        metapaths = [[('movie', 'actor'), ('actor', 'movie')],
+                    [('movie', 'director'), ('director', 'movie')]]
+        transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
+                                drop_unconnected_node_types=drop_unconnected_node_types)
+        dataset = IMDB(path, transform=transform)
+        data = dataset[0]
+        return data
+    elif data_name == "AMiner":
+        path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/AMiner')
+        metapaths = [[('movie', 'actor'), ('actor', 'movie')],
+                    [('movie', 'director'), ('director', 'movie')]]
+        transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
+                                drop_unconnected_node_types=drop_unconnected_node_types)
+        dataset = AMiner(path, transform=transform)
+        data = dataset[0]
+        return data
+    elif data_name == "OGB_MAG":
+        path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/OGB_MAG')
+        metapaths = [[('author', 'paper'), ('paper', 'paper')],
+                    [('author', 'paper'), ('paper', 'field_of_study')]]
+        transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
+                                drop_unconnected_node_types=drop_unconnected_node_types)
+        dataset = OGB_MAG(path, transform=transform)
+        data = dataset[0]
+        return data
+    elif data_name == "MovieLens":
+        path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/MovieLens')
+        metapaths = [[('author', 'paper'), ('paper', 'paper')],
+                    [('author', 'paper'), ('paper', 'field_of_study')]]
+        transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
+                                drop_unconnected_node_types=drop_unconnected_node_types)
+        dataset = MovieLens(path, transform=transform)
+        data = dataset[0]
+        return data
+    elif data_name == "Taobao":
+        path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/Taobao')
+        metapaths = [[('item', 'user'), ('user', 'item')],
+                    [('item', 'category'), ('category', 'item')]]
+        transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
+                                drop_unconnected_node_types=drop_unconnected_node_types)
+        dataset = Taobao(path, transform=transform)
+        data = dataset[0]
+        return data
