@@ -1,0 +1,119 @@
+HeteroData(
+  metapath_dict={
+    (movie, metapath_0, movie)=[2],
+    (movie, metapath_1, movie)=[2],
+  },
+  movie={
+    x=[4278, 3066],
+    y=[4278],
+    train_mask=[4278],
+    val_mask=[4278],
+    test_mask=[4278],
+  },
+  director={ x=[2081, 3066] },
+  actor={ x=[5257, 3066] },
+  (movie, to, director)={ edge_index=[2, 4278] },
+  (movie, to, actor)={ edge_index=[2, 12828] },
+  (director, to, movie)={ edge_index=[2, 4278] },
+  (actor, to, movie)={ edge_index=[2, 12828] },
+  (movie, metapath_0, movie)={ edge_index=[2, 85358] },
+  (movie, metapath_1, movie)={ edge_index=[2, 17446] }
+)
+Dataset: DBLP
+HeteroData(
+  metapath_dict={
+    (paper, metapath_0, paper)=[2],
+    (author, metapath_1, conference)=[2],
+  },
+  author={
+    x=[4057, 334],
+    y=[4057],
+    train_mask=[4057],
+    val_mask=[4057],
+    test_mask=[4057],
+  },
+  paper={ x=[14328, 4231] },
+  term={ x=[7723, 50] },
+  conference={ num_nodes=20 },
+  (author, to, paper)={ edge_index=[2, 19645] },
+  (paper, to, author)={ edge_index=[2, 19645] },
+  (paper, to, term)={ edge_index=[2, 85810] },
+  (paper, to, conference)={ edge_index=[2, 14328] },
+  (term, to, paper)={ edge_index=[2, 85810] },
+  (conference, to, paper)={ edge_index=[2, 14328] },
+  (paper, metapath_0, paper)={ edge_index=[2, 16379950] },
+  (author, metapath_1, conference)={ edge_index=[2, 9205] }
+)
+
+Dataset: IMDB
+HeteroData(
+  metapath_dict={
+    (movie, metapath_0, movie)=[2],
+    (movie, metapath_1, movie)=[2],
+  },
+  movie={
+    x=[4278, 3066],
+    y=[4278],
+    train_mask=[4278],
+    val_mask=[4278],
+    test_mask=[4278],
+  },
+  director={ x=[2081, 3066] },
+  actor={ x=[5257, 3066] },
+  (movie, to, director)={ edge_index=[2, 4278] },
+  (movie, to, actor)={ edge_index=[2, 12828] },
+  (director, to, movie)={ edge_index=[2, 4278] },
+  (actor, to, movie)={ edge_index=[2, 12828] },
+  (movie, metapath_0, movie)={ edge_index=[2, 85358] },
+  (movie, metapath_1, movie)={ edge_index=[2, 17446] }
+)
+
+Dataset: DBLP
+HeteroData(
+  metapath_dict={
+    (paper, metapath_0, paper)=[2],
+    (author, metapath_1, conference)=[2],
+  },
+  author={
+    x=[4057, 334],
+    y=[4057],
+    train_mask=[4057],
+    val_mask=[4057],
+    test_mask=[4057],
+  },
+  paper={ x=[14328, 4231] },
+  term={ x=[7723, 50] },
+  conference={ num_nodes=20 },
+  (author, to, paper)={ edge_index=[2, 19645] },
+  (paper, to, author)={ edge_index=[2, 19645] },
+  (paper, to, term)={ edge_index=[2, 85810] },
+  (paper, to, conference)={ edge_index=[2, 14328] },
+  (term, to, paper)={ edge_index=[2, 85810] },
+  (conference, to, paper)={ edge_index=[2, 14328] },
+  (paper, metapath_0, paper)={ edge_index=[2, 16379950] },
+  (author, metapath_1, conference)={ edge_index=[2, 9205] }
+)
+
+Dataset: IMDB
+HeteroData(
+  metapath_dict={
+    (movie, metapath_0, movie)=[2],
+    (movie, metapath_1, movie)=[2],
+  },
+  movie={
+    x=[4278, 3066],
+    y=[4278],
+    train_mask=[4278],
+    val_mask=[4278],
+    test_mask=[4278],
+  },
+  director={ x=[2081, 3066] },
+  actor={ x=[5257, 3066] },
+  (movie, to, director)={ edge_index=[2, 4278] },
+  (movie, to, actor)={ edge_index=[2, 12828] },
+  (director, to, movie)={ edge_index=[2, 4278] },
+  (actor, to, movie)={ edge_index=[2, 12828] },
+  (movie, metapath_0, movie)={ edge_index=[2, 85358] },
+  (movie, metapath_1, movie)={ edge_index=[2, 17446] }
+)
+

@@ -2,7 +2,6 @@ import os.path as osp
 import os
 import random
 import logging
-from utils.args import args
 from typing import Dict, List, Union
 
 import torch
@@ -58,7 +57,7 @@ def load_hete_graph_data(dataset_name, device, data_dir='/data/DBLP'):
         return None
 
 
-def load_fed_hete_graph_data(dataset_name, device, data_dir='/data/DBLP'):
+def load_fed_hete_graph_data(dataset_name, device, client_nums, data_dir='/data/DBLP'):
     path = os.path.abspath(os.getcwd() + data_dir)
 
     if dataset_name == 'DBLP':
@@ -75,13 +74,13 @@ def load_fed_hete_graph_data(dataset_name, device, data_dir='/data/DBLP'):
         random.shuffle(author_nodes_indexs)
         random.shuffle(paper_nodes_indexs)
 
-        author_quarter_length = len(author_nodes_indexs) // args.client_nums
-        paper_quarter_length = len(paper_nodes_indexs) // args.client_nums
+        author_quarter_length = len(author_nodes_indexs) // client_nums
+        paper_quarter_length = len(paper_nodes_indexs) // client_nums
 
         author_subgraph_indexs = []
         paper_subgraph_indexs = []
-        for i in range(args.client_nums):
-            if i != args.client_nums - 1:
+        for i in range(client_nums):
+            if i != client_nums - 1:
                 author_subgraph_indexs.append(
                     author_nodes_indexs[i * author_quarter_length: (i + 1) * author_quarter_length])
                 paper_subgraph_indexs.append(
@@ -100,7 +99,7 @@ def load_fed_hete_graph_data(dataset_name, device, data_dir='/data/DBLP'):
         y = []
         features = []
 
-        for i in range(args.client_nums):
+        for i in range(client_nums):
             sub_graph = graph.subgraph({
                 'author': torch.tensor(author_subgraph_indexs[i], dtype=torch.long),
                 'paper': torch.tensor(paper_subgraph_indexs[i], dtype=torch.long)
@@ -131,7 +130,7 @@ def load_fed_hete_graph_data(dataset_name, device, data_dir='/data/DBLP'):
         return None
 
 
-all_datasets = ["DBLP", "IMDB", "Aminer", ""]
+all_datasets = ["DBLP", "IMDB", "AMiner", "OGB_MAG", "MovieLens", "Taobao", "AmazonBook"]
 
 def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnected_node_types: bool): 
     if data_name == "DBLP":
@@ -154,8 +153,8 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
         return data
     elif data_name == "AMiner":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/AMiner')
-        metapaths = [[('movie', 'actor'), ('actor', 'movie')],
-                    [('movie', 'director'), ('director', 'movie')]]
+        metapaths = [[('author', 'paper'), ('paper', 'author')],
+                    [('paper', 'venue'), ('venue', 'paper')]]
         transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = AMiner(path, transform=transform)
@@ -188,3 +187,13 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
         dataset = Taobao(path, transform=transform)
         data = dataset[0]
         return data
+    elif data_name == "AmazonBook":
+        path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/AmazonBook')
+        metapaths = [[('book', 'user'), ('user', 'book')]]
+        transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
+                                drop_unconnected_node_types=drop_unconnected_node_types)
+        dataset = AmazonBook(path, transform=transform)
+        data = dataset[0]
+        return data
+    else:
+        return None
