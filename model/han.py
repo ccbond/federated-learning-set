@@ -1,43 +1,26 @@
+from typing import Dict, List, Union
+
+import torch
+import torch.nn.functional as F
 from torch import nn
 from torch_geometric.nn import HANConv
 
 
 class HAN(nn.Module):
-    """
-    Heterogeneous Graph Attention Network (HAN) model.
-    """
+    def __init__(self, in_channels: Union[int, Dict[str, int]],
+                 out_channels: int, hidden_channels=16, heads=4, n_layers=2, metadata=None):
+        super().__init__()
+        self.convs = nn.ModuleList()
+        self.relu = F.relu
+        self.convs.append(HANConv(in_channels, hidden_channels, heads=heads, dropout=0.6,
+                                  metadata=metadata))
+        for i in range(n_layers - 1):
+            self.convs.append(HANConv(hidden_channels, hidden_channels, heads=heads, dropout=0.6,
+                                      metadata=metadata))
+        self.lin = torch.nn.Linear(hidden_channels, out_channels)
 
-    def __init__(self, in_channels, hidden_channels, out_channels, graph):
-        """
-        Initialize the HAN model.
-
-        Parameters:
-        - in_channels (int): Number of input features.
-        - hidden_channels (int): Number of hidden units.
-        - out_channels (int): Number of output features.
-        - graph (HeteroData): Input graph.
-        """
-        super(HAN, self).__init__()
-        self.conv1 = HANConv(in_channels, hidden_channels,
-                             graph.metadata(), heads=1)
-        self.conv2 = HANConv(hidden_channels, out_channels,
-                             graph.metadata(), heads=1)
-
-    def forward(self, data):
-        """
-        Forward pass for the HAN model.
-
-        Parameters:
-        - data (HeteroData): Input data.
-
-        Returns:
-        - Tensor: Output data.
-        """
-        x_dict, edge_index_dict = data.x_dict, data.edge_index_dict
-        # logging.info(f"x_dict: {x_dict}")
-        # logging.info(f"edge_index_dict: {edge_index_dict}")
-        x = self.conv1(x_dict, edge_index_dict)
-        x = self.conv2(x, edge_index_dict)
-        x = x['author']
-
-        return x
+    def forward(self, x_dict, edge_index_dict, labeled_class):
+        for i, conv in enumerate(self.convs):
+            x_dict = conv(x_dict, edge_index_dict)
+        x_dict = self.lin(x_dict[labeled_class])
+        return x_dict 

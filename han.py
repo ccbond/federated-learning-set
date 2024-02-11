@@ -8,6 +8,8 @@ from torch import nn
 import torch_geometric.transforms as T
 from torch_geometric.datasets import DBLP
 from torch_geometric.nn import HANConv
+from torch_geometric.loader import NeighborLoader
+
 
 torch.cuda.empty_cache()
 
@@ -19,6 +21,8 @@ dataset = DBLP(path, transform=transform)
 data = dataset[0]
 print(data)
 
+train_idx = data['author'].train_mask.nonzero(as_tuple=True)[0]
+train_loader = NeighborLoader(data, input_nodes=('author', train_idx), batch_size=32, num_neighbors = [15] * 3, shuffle=True)
 
 class HAN(nn.Module):
     def __init__(self, in_channels: Union[int, Dict[str, int]],
@@ -36,6 +40,7 @@ class HAN(nn.Module):
 
 model = HAN(in_channels=-1, out_channels=3)
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
 data, model = data.to(device), model.to(device)
 
 with torch.no_grad():  # Initialize lazy modules.
