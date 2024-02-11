@@ -130,7 +130,7 @@ def load_fed_hete_graph_data(dataset_name, device, client_nums, data_dir='/data/
         return None
 
 
-all_datasets = ["DBLP", "IMDB", "AMiner", "OGB_MAG", "MovieLens", "Taobao", "AmazonBook"]
+all_datasets = ["DBLP", "IMDB", "OGB_MAG", "AmazonBook", "MovieLens", "AMiner",  "Taobao"]
 
 def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnected_node_types: bool): 
     if data_name == "DBLP":
@@ -151,19 +151,10 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
         dataset = IMDB(path, transform=transform)
         data = dataset[0]
         return data
-    elif data_name == "AMiner":
-        path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/AMiner')
-        metapaths = [[('author', 'paper'), ('paper', 'author')],
-                    [('paper', 'venue'), ('venue', 'paper')]]
-        transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
-                                drop_unconnected_node_types=drop_unconnected_node_types)
-        dataset = AMiner(path, transform=transform)
-        data = dataset[0]
-        return data
     elif data_name == "OGB_MAG":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/OGB_MAG')
         metapaths = [[('author', 'paper'), ('paper', 'paper')],
-                    [('author', 'paper'), ('paper', 'field_of_study')]]
+                    [('paper', 'paper'), ('paper', 'field_of_study')]]
         transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = OGB_MAG(path, transform=transform)
@@ -193,6 +184,15 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
         transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = AmazonBook(path, transform=transform)
+        data = dataset[0]
+        return data
+    elif data_name == "AMiner":
+        path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/AMiner')
+        metapaths = [[('author', 'paper'), ('paper', 'author')],
+                    [('paper', 'venue'), ('venue', 'paper')]]
+        transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
+                                drop_unconnected_node_types=drop_unconnected_node_types)
+        dataset = AMiner(path, transform=transform)
         data = dataset[0]
         return data
     else:

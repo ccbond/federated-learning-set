@@ -1,24 +1,3 @@
-HeteroData(
-  metapath_dict={
-    (movie, metapath_0, movie)=[2],
-    (movie, metapath_1, movie)=[2],
-  },
-  movie={
-    x=[4278, 3066],
-    y=[4278],
-    train_mask=[4278],
-    val_mask=[4278],
-    test_mask=[4278],
-  },
-  director={ x=[2081, 3066] },
-  actor={ x=[5257, 3066] },
-  (movie, to, director)={ edge_index=[2, 4278] },
-  (movie, to, actor)={ edge_index=[2, 12828] },
-  (director, to, movie)={ edge_index=[2, 4278] },
-  (actor, to, movie)={ edge_index=[2, 12828] },
-  (movie, metapath_0, movie)={ edge_index=[2, 85358] },
-  (movie, metapath_1, movie)={ edge_index=[2, 17446] }
-)
 Dataset: DBLP
 HeteroData(
   metapath_dict={
@@ -68,52 +47,41 @@ HeteroData(
   (movie, metapath_1, movie)={ edge_index=[2, 17446] }
 )
 
-Dataset: DBLP
+Dataset: OGB_MAG
 HeteroData(
   metapath_dict={
-    (paper, metapath_0, paper)=[2],
-    (author, metapath_1, conference)=[2],
+    (author, metapath_0, paper)=[2],
+    (paper, metapath_1, field_of_study)=[2],
   },
-  author={
-    x=[4057, 334],
-    y=[4057],
-    train_mask=[4057],
-    val_mask=[4057],
-    test_mask=[4057],
+  paper={
+    x=[736389, 128],
+    year=[736389],
+    y=[736389],
+    train_mask=[736389],
+    val_mask=[736389],
+    test_mask=[736389],
   },
-  paper={ x=[14328, 4231] },
-  term={ x=[7723, 50] },
-  conference={ num_nodes=20 },
-  (author, to, paper)={ edge_index=[2, 19645] },
-  (paper, to, author)={ edge_index=[2, 19645] },
-  (paper, to, term)={ edge_index=[2, 85810] },
-  (paper, to, conference)={ edge_index=[2, 14328] },
-  (term, to, paper)={ edge_index=[2, 85810] },
-  (conference, to, paper)={ edge_index=[2, 14328] },
-  (paper, metapath_0, paper)={ edge_index=[2, 16379950] },
-  (author, metapath_1, conference)={ edge_index=[2, 9205] }
+  author={ num_nodes=1134649 },
+  institution={ num_nodes=8740 },
+  field_of_study={ num_nodes=59965 },
+  (author, affiliated_with, institution)={ edge_index=[2, 1043998] },
+  (author, writes, paper)={ edge_index=[2, 7145660] },
+  (paper, cites, paper)={ edge_index=[2, 5416271] },
+  (paper, has_topic, field_of_study)={ edge_index=[2, 7505078] },
+  (author, metapath_0, paper)={ edge_index=[2, 43266328] },
+  (paper, metapath_1, field_of_study)={ edge_index=[2, 26607169] }
 )
 
-Dataset: IMDB
+Dataset: AmazonBook
 HeteroData(
-  metapath_dict={
-    (movie, metapath_0, movie)=[2],
-    (movie, metapath_1, movie)=[2],
+  metapath_dict={ (book, metapath_0, book)=[2] },
+  user={ num_nodes=52643 },
+  book={ num_nodes=91599 },
+  (user, rates, book)={
+    edge_index=[2, 2380730],
+    edge_label_index=[2, 603378],
   },
-  movie={
-    x=[4278, 3066],
-    y=[4278],
-    train_mask=[4278],
-    val_mask=[4278],
-    test_mask=[4278],
-  },
-  director={ x=[2081, 3066] },
-  actor={ x=[5257, 3066] },
-  (movie, to, director)={ edge_index=[2, 4278] },
-  (movie, to, actor)={ edge_index=[2, 12828] },
-  (director, to, movie)={ edge_index=[2, 4278] },
-  (actor, to, movie)={ edge_index=[2, 12828] },
-  (movie, metapath_0, movie)={ edge_index=[2, 85358] },
-  (movie, metapath_1, movie)={ edge_index=[2, 17446] }
+  (book, rated_by, user)={ edge_index=[2, 2380730] },
+  (book, metapath_0, book)={ edge_index=[2, 330335853] }
 )
 
