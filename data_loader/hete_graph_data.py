@@ -197,3 +197,13 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
         return data
     else:
         return None
+
+def get_data_target_node_type(dataset: str):
+    if dataset == "DBLP":
+        return "author"
+    elif dataset == "IMDB":
+        return "movie"
+    elif dataset == "OGB_MAG":
+        return "paper"
+    else:
+        return None

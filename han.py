@@ -1,3 +1,4 @@
+import logging
 import os.path as osp
 from typing import Dict, List, Union
 
@@ -9,17 +10,21 @@ import torch_geometric.transforms as T
 from torch_geometric.datasets import DBLP
 from torch_geometric.nn import HANConv
 from torch_geometric.loader import NeighborLoader
-
+from data_loader.hete_graph_data import all_datasets, load_full_dataset
 
 torch.cuda.empty_cache()
 
-path = osp.join(osp.dirname(osp.realpath(__file__)), './data/DBLP')
-metapaths = [[('author', 'paper'), ('paper', 'term')]]
-transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=True,
-                           drop_unconnected_node_types=True)
-dataset = DBLP(path, transform=transform)
-data = dataset[0]
-print(data)
+for dataset in all_datasets:
+    logging.info(f"Loading dataset: {dataset}")
+    data = load_full_dataset(dataset, True, True)
+
+    train_idx = data['author'].train_mask.nonzero(as_tuple=True)[0]
+
+
+
+
+
+
 
 train_idx = data['author'].train_mask.nonzero(as_tuple=True)[0]
 train_loader = NeighborLoader(data, input_nodes=('author', train_idx), batch_size=32, num_neighbors = [15] * 3, shuffle=True)

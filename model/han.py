@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Dict, Union
 
 import torch
 import torch.nn.functional as F
@@ -14,13 +14,13 @@ class HAN(nn.Module):
         self.relu = F.relu
         self.convs.append(HANConv(in_channels, hidden_channels, heads=heads, dropout=0.6,
                                   metadata=metadata))
-        for i in range(n_layers - 1):
+        for _ in range(n_layers - 1):
             self.convs.append(HANConv(hidden_channels, hidden_channels, heads=heads, dropout=0.6,
                                       metadata=metadata))
         self.lin = torch.nn.Linear(hidden_channels, out_channels)
 
     def forward(self, x_dict, edge_index_dict, labeled_class):
-        for i, conv in enumerate(self.convs):
+        for _, conv in enumerate(self.convs):
             x_dict = conv(x_dict, edge_index_dict)
         x_dict = self.lin(x_dict[labeled_class])
         return x_dict 
