@@ -41,41 +41,34 @@ for dataset in all_datasets:
     def train() -> float:
         model.train()
 
-        for batch in train_loader:
-            print("2")
-            print(batch)
-            optimizer.zero_grad()
-            batch = batch.to_homogeneous()
-            batch = batch.to(device)
-            batch_size = batch[target_node_type].batch_size
-            out = model(batch.x_dict, batch.edge_index_dict, target_node_type)
+        optimizer.zero_grad()
+        data = data.to(device)
+        batch_size = data[target_node_type].batch_size
+        out = model(data.x_dict, data.edge_index_dict, target_node_type)
 
-            loss = F.cross_entropy(out[target_node_type][:batch_size], batch[target_node_type][:batch_size])
-            loss.backward()
-            optimizer.step()
-
-            total_examples += batch_size
-            total_loss += float(loss) * batch_size
+        loss = F.cross_entropy(out[target_node_type], data[target_node_type].y)
+        loss.backward()
+        optimizer.step()
         
-        return total_loss / total_examples
+        return loss.item()
 
 
     @torch.no_grad()
-    def test_batched() -> List[float]:
+    def test() -> List[float]:
         model.eval()
         
+        data = data.to(device)
+        out = model(data.x_dict, data.edge_index_dict, target_node_type).argmax(dim=-1)
+        
+
+        # 初始化正确统计和总数统计
         correct = {split: 0 for split in ['train', 'val', 'test']}
         total = {split: 0 for split in ['train', 'val', 'test']}
 
-        for batch in test_loader:
-            print(batch)
-            batch = batch.to(device)
-            out = model(batch.x_dict, batch.edge_index_dict, target_node_type).argmax(dim=-1)
-            
-            for split in ['train_mask', 'val_mask', 'test_mask']:
-                mask = batch['author'][split]
-                total[split] += mask.sum().item()
-                correct[split] += (out[mask] == batch['author'].y[mask]).sum().item()
+        for split in ['train_mask', 'val_mask', 'test_mask']:
+            mask = data['author'][split].to(device)
+            total[split] += mask.sum().item()
+            correct[split] += (out[mask] == data['author'].y[mask]).sum().item()
 
         # 计算每个分割的准确率
         accs = [correct[split] / total[split] for split in ['train', 'val', 'test']]
@@ -87,7 +80,7 @@ for dataset in all_datasets:
     for epoch in range(1, 200):
 
         loss = train()
-        train_acc, val_acc, test_acc = test_batched()
+        train_acc, val_acc, test_acc = test()
         print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Train: {train_acc:.4f}, '
             f'Val: {val_acc:.4f}, Test: {test_acc:.4f}')
 
