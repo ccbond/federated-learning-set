@@ -2,7 +2,7 @@ import logging
 from model.han import HAN
 
 
-def init_model(model_type, num_classes, graph, device):
+def init_model(model_type, num_classes, graph):
     """
     Initialize the model based on the specified arguments.
 
@@ -15,7 +15,7 @@ def init_model(model_type, num_classes, graph, device):
     - model: The initialized PyTorch model, or None if the model is not found.
     """
     if model_type == 'han':
-        model = HAN(-1, num_classes, metadata=graph.metadata()).to(device)
+        model = HAN(-1, num_classes, metadata=graph.metadata())
         return model
     else:
         logging.info("Model not found.")

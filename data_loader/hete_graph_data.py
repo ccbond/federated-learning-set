@@ -135,13 +135,14 @@ all_datasets = ["DBLP", "IMDB", "OGB_MAG", "AmazonBook", "MovieLens", "AMiner", 
 def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnected_node_types: bool): 
     if data_name == "DBLP":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/DBLP')
-        metapaths = [[("paper", "conference"), ("conference", "paper")],
-                     [("author", "paper"), ("paper", "conference")]]
+        metapaths = [[("paper", "term"), ("term", "paper")],
+                     [("author", "paper"), ("paper", "author")]]
         transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = DBLP(path, transform=transform)
         data = dataset[0]
         return data
+    
     elif data_name == "IMDB":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/IMDB')
         metapaths = [[('movie', 'actor'), ('actor', 'movie')],
@@ -151,6 +152,7 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
         dataset = IMDB(path, transform=transform)
         data = dataset[0]
         return data
+    
     elif data_name == "OGB_MAG":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/OGB_MAG')
         metapaths = [[('author', 'paper'), ('paper', 'paper')],
@@ -160,6 +162,7 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
         dataset = OGB_MAG(path, transform=transform)
         data = dataset[0]
         return data
+    
     elif data_name == "MovieLens":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/MovieLens')
         metapaths = [[('author', 'paper'), ('paper', 'paper')],
@@ -169,6 +172,7 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
         dataset = MovieLens(path, transform=transform)
         data = dataset[0]
         return data
+    
     elif data_name == "Taobao":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/Taobao')
         metapaths = [[('item', 'user'), ('user', 'item')],
@@ -178,6 +182,7 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
         dataset = Taobao(path, transform=transform)
         data = dataset[0]
         return data
+    
     elif data_name == "AmazonBook":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/AmazonBook')
         metapaths = [[('book', 'user'), ('user', 'book')]]
@@ -186,6 +191,7 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
         dataset = AmazonBook(path, transform=transform)
         data = dataset[0]
         return data
+    
     elif data_name == "AMiner":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/AMiner')
         metapaths = [[('author', 'paper'), ('paper', 'author')],
@@ -195,6 +201,7 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
         dataset = AMiner(path, transform=transform)
         data = dataset[0]
         return data
+
     else:
         return None
 
