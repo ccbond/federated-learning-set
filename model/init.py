@@ -20,3 +20,7 @@ def init_model(model_type, num_classes, graph):
     else:
         logging.info("Model not found.")
         return None
+
+
+def all_models():
+    return ['han']
