@@ -23,9 +23,8 @@ logging.info("Device: %s", device.type)
 @click.command()
 @click.option('--model', default="han", help='The model name')
 @click.option('--dataset', default="DBLP", help='The dataset name')
-@click.option('--epochs', default=100, help='The rounds of training')
 def nofed(model, dataset, epochs):
-    no_fed_node_classification(model, dataset, epochs)
+    no_fed_node_classification(model, dataset)
     print("No fed run finish.")    
 
 
@@ -57,4 +56,3 @@ if __name__ == '__main__':
     Main function for training and evaluating heterogeneous model
     """
     cli()
-

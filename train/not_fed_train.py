@@ -16,7 +16,7 @@ torch.cuda.empty_cache()
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-def no_fed_node_classification(model_name: str, dataset_name: str, epochs: int):
+def no_fed_node_classification(model_name: str, dataset_name: str):
     if dataset_name == 'all':
         datasets = all_datasets
     else:
@@ -29,6 +29,9 @@ def no_fed_node_classification(model_name: str, dataset_name: str, epochs: int):
         
     is_mini_batch = get_is_need_mini_batch(dataset_name)
     print(f"Is mini batch: {is_mini_batch}")
+
+    best_macri_fl = 0
+    start_patience = patience = 100
 
     for model_type in models:
         for dataset in datasets:
@@ -46,8 +49,10 @@ def no_fed_node_classification(model_name: str, dataset_name: str, epochs: int):
             #     model(data.x_dict, data.edge_index_dict, target_node_type)
 
             optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=0.001)
+            epochs = 0
 
-            for epoch in range(1, epochs):
+            while True:
+                epochs += 1
                 loss = no_fed_train_nc(model, data, optimizer, target_node_type, is_mini_batch, device)
                 preds, labels = no_fed_test_nc(model, data, target_node_type, is_mini_batch, device)
 
@@ -58,5 +63,16 @@ def no_fed_node_classification(model_name: str, dataset_name: str, epochs: int):
                 micro_f1 = f1_score(labels, preds, average='micro')
 
                 print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Macro F1: {macro_f1:.4f}, Micro F1: {micro_f1:.4f}')
+
+                if best_macri_fl <= macro_f1:
+                    patience = start_patience
+                    best_macri_fl = macro_f1
+                else:
+                    patience -= 1
+
+                if patience <= 0:
+                    print('Stopping training as validation accuracy did not improve '
+                        f'for {start_patience} epochs')
+                    break
 
             logging.info(f'DataSet: {dataset}, Model: {model_type}, Loss: {loss}, Macro F1: {macro_f1:.4f}, Micro F1: {micro_f1:.4f}, Epochs: {epoch}')
