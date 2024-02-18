@@ -3,7 +3,7 @@ import click
 import torch
 import logging
 import datetime
-from notfed import no_fed_node_classification
+from train.not_fed_train import no_fed_node_classification
 from tools.show_and_store_dataset_info import show_and_store_dataset_info
 
 

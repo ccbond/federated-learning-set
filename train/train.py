@@ -95,3 +95,5 @@ def no_fed_test_nc(model, data, target_node_type, is_mini_batch, device) -> List
         return mini_batch_test_nc(model, test_loader, target_node_type, device)
     else:
         return full_test_nc(model, data, target_node_type)
+
+

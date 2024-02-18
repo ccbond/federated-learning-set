@@ -3,12 +3,11 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
+from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.nn.dense import Linear
 from torch_geometric.nn.inits import glorot, reset
 from torch_geometric.typing import Adj, EdgeType, Metadata, NodeType, OptTensor
 from torch_geometric.utils import softmax
-
-from torch_geometric.nn import HANConv
 
 def group(
     xs: List[Tensor],
@@ -29,8 +28,7 @@ def group(
         out = torch.sum(attn.view(num_edge_types, 1, -1) * out, dim=0)
         return out, attn
 
-class FedHANConv(HANConv):
-
+class FedHANConv(MessagePassing):
     def __init__(
         self,
         in_channels: Union[int, Dict[str, int]],
@@ -76,9 +74,6 @@ class FedHANConv(HANConv):
         glorot(self.lin_dst)
         self.k_lin.reset_parameters()
         glorot(self.q)
-
-    # def update_parameters(self):
-
 
     def forward(
         self,
