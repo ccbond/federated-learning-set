@@ -43,7 +43,7 @@ def no_fed_node_classification(model_name: str, dataset_name: str, epochs: int):
             data, model = data.to(device), model.to(device)
 
             with torch.no_grad():  # Initialize lazy modules.                    
-                model(data.x_dict, data.edge_index_dict, target_node_type, device)
+                model(data.x_dict, data.edge_index_dict, target_node_type)
 
             optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=0.001)
 
@@ -51,8 +51,8 @@ def no_fed_node_classification(model_name: str, dataset_name: str, epochs: int):
                 loss = no_fed_train_nc(model, data, optimizer, target_node_type, is_mini_batch, device)
                 preds, labels = no_fed_test_nc(model, data, target_node_type, is_mini_batch, device)
 
-                preds = torch.stack(preds).cpu().numpy()
-                labels = torch.stack(labels).cpu().numpy()
+                preds = preds.cpu().numpy()
+                labels = labels.cpu().numpy()
 
                 macro_f1 = f1_score(labels, preds, average='macro')
                 micro_f1 = f1_score(labels, preds, average='micro')

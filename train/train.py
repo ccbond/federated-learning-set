@@ -1,5 +1,3 @@
-import torch
-
 from tqdm import tqdm
 from typing import List
 import torch
@@ -11,7 +9,7 @@ def full_train_nc(model, data, optimizer, target_node_type, device) -> float:
 
     optimizer.zero_grad()
     data = data.to(device)
-    out, _ = model(data.x_dict, data.edge_index_dict, target_node_type, device)
+    out, _ = model(data.x_dict, data.edge_index_dict, target_node_type)
     mask = data[target_node_type].train_mask
     loss = F.cross_entropy(out[mask], data[target_node_type].y[mask])
     loss.backward()
@@ -32,7 +30,7 @@ def mini_batch_train_nc(model, train_loader, optimizer, target_node_type, device
         # batch = batch.to_homogeneous()
         # print(batch)
         batch = batch.to(device)
-        out, processed = model(batch.x_dict, batch.edge_index_dict, target_node_type, device)
+        out, processed = model(batch.x_dict, batch.edge_index_dict, target_node_type)
         if not processed:
             continue
         
@@ -48,17 +46,17 @@ def mini_batch_train_nc(model, train_loader, optimizer, target_node_type, device
     return total_loss / total_examples
 
 @torch.no_grad()
-def full_test_nc(model, data, target_node_type, device) -> List[float]:
+def full_test_nc(model, data, target_node_type):
     model.eval()
 
-    out, _ = model(data.x_dict, data.edge_index_dict, target_node_type, device)
+    out, _ = model(data.x_dict, data.edge_index_dict, target_node_type)
     preds = out.argmax(dim=-1)
     labels = data[target_node_type].y
 
     return preds, labels
 
 @torch.no_grad()
-def mini_batch_test_nc(model, test_loader, target_node_type, device) -> List[float]:
+def mini_batch_test_nc(model, test_loader, target_node_type, device):
     model.eval()
 
     all_preds = []
@@ -66,7 +64,7 @@ def mini_batch_test_nc(model, test_loader, target_node_type, device) -> List[flo
 
     for batch in test_loader:
         batch = batch.to(device)
-        out, processed = model(batch.x_dict, batch.edge_index_dict, target_node_type, device)
+        out, processed = model(batch.x_dict, batch.edge_index_dict, target_node_type)
         if not processed:
             continue
         
@@ -79,7 +77,7 @@ def mini_batch_test_nc(model, test_loader, target_node_type, device) -> List[flo
         all_preds.extend(preds)
         all_labels.extend(labels)
 
-    return all_preds, all_labels
+    return torch.stack(all_preds), torch.stack(all_labels)
 
 
 # not federated training for node classification
@@ -89,7 +87,7 @@ def no_fed_train_nc(model, data, optimizer, target_node_type, is_mini_batch, dev
         train_idx = data[target_node_type].train_mask.nonzero(as_tuple=True)[0]
         train_loader = NeighborLoader(data, num_neighbors=[32]*3, input_nodes=(target_node_type, train_idx), batch_size=128, shuffle=False)
         
-        return mini_batch_train_nc(model, train_loader, optimizer, target_node_type, device)
+        return mini_batch_train_nc(model, train_loader, optimizer, target_node_type)
     else:
         return full_train_nc(model, data, optimizer, target_node_type, device)
 
@@ -100,4 +98,4 @@ def no_fed_test_nc(model, data, target_node_type, is_mini_batch, device) -> List
         test_loader = NeighborLoader(data, num_neighbors=[32]*3, input_nodes=(target_node_type, test_idx), batch_size=128, shuffle=False)
         return mini_batch_test_nc(model, test_loader, target_node_type, device)
     else:
-        return full_test_nc(model, data, target_node_type, device)
+        return full_test_nc(model, data, target_node_type)
