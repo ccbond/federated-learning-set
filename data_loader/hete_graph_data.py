@@ -46,8 +46,10 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
 
     elif data_name == "OGB_MAG":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/OGB_MAG')
-        metapaths = [[('author', 'paper'), ('paper', 'paper')],
-                    [('paper', 'paper'), ('paper', 'field_of_study')]]
+        metapaths = [[('author', 'paper'), ('paper', 'paper'),('paper', 'author')],
+                    [('author', 'paper'), ('paper', 'field_of_study'), ('field_of_study', 'paper'), ('paper', 'author')],
+                    [('author', 'paper'), ('paper', 'author')],
+                    [('author', 'institution'), ('institution', 'author')]]
         transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = OGB_MAG(path, transform=transform, preprocess='metapath2vec')
@@ -82,7 +84,7 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
     elif data_name == "AMiner":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/AMiner')
         metapaths = [[('author', 'paper'), ('paper', 'author')],
-                    [('paper', 'venue'), ('venue', 'paper')]]
+                    [('author', 'paper'), ('paper', 'venue'), ('venue', 'paper'), ('paper', 'author')]]
         transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = AMiner(path, transform=transform)
@@ -100,6 +102,8 @@ def get_data_target_node_type(dataset: str):
         return "movie"
     elif dataset == "OGB_MAG":
         return "paper"
+    elif dataset == "AMiner":
+        return "author"
     else:
         return None
 
@@ -109,6 +113,8 @@ def get_is_need_mini_batch(dataset: str):
     elif dataset == "IMDB":
         return False
     elif dataset == "OGB_MAG":
+        return True
+    elif dataset == "AMiner":
         return True
     else:
         return False

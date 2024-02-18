@@ -13,7 +13,6 @@ def group(
     xs: List[Tensor],
     q: nn.Parameter,
     k_lin: nn.Module,
-    fed_attn: Any
 ) -> Tuple[OptTensor, OptTensor]:
 
     if len(xs) == 0:
