@@ -85,3 +85,28 @@ HeteroData(
   (book, metapath_0, book)={ edge_index=[2, 330335853] }
 )
 
+Dataset: OGB_MAG
+HeteroData(
+  metapath_dict={
+    (author, metapath_0, paper)=[2],
+    (paper, metapath_1, field_of_study)=[2],
+  },
+  paper={
+    x=[736389, 128],
+    year=[736389],
+    y=[736389],
+    train_mask=[736389],
+    val_mask=[736389],
+    test_mask=[736389],
+  },
+  author={ x=[1134649, 128] },
+  institution={ x=[8740, 128] },
+  field_of_study={ x=[59965, 128] },
+  (author, affiliated_with, institution)={ edge_index=[2, 1043998] },
+  (author, writes, paper)={ edge_index=[2, 7145660] },
+  (paper, cites, paper)={ edge_index=[2, 5416271] },
+  (paper, has_topic, field_of_study)={ edge_index=[2, 7505078] },
+  (author, metapath_0, paper)={ edge_index=[2, 43266328] },
+  (paper, metapath_1, field_of_study)={ edge_index=[2, 26607169] }
+)
+

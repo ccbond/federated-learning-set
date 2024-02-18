@@ -1,3 +1,4 @@
+import os
 import click
 import torch
 import logging
@@ -8,8 +9,14 @@ from train.train import train
 from model.init import init_model
 
 
+# Set log config
 now = datetime.datetime.now()
-log_file = now.strftime('%Y-%m-%d') + '.log'
+
+logs_dir = 'logs'
+if not os.path.exists(logs_dir):
+    os.makedirs(logs_dir)
+
+log_file = os.path.join(logs_dir, now.strftime('%Y-%m-%d') + '.log')
 logging.basicConfig(level=logging.INFO, filename=log_file,
                     filemode='w',  format='%(asctime)s - %(message)s')
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
