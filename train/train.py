@@ -1,80 +1,103 @@
 import torch
 
 from tqdm import tqdm
+from typing import List
+import torch
+import torch.nn.functional as F
+from torch_geometric.loader import NeighborLoader
 
+def full_train_nc(model, data, optimizer, target_node_type, device) -> float:
+    model.train()
 
-@torch.no_grad()  # Decorator to disable gradient calculation during inference
-def test(model, graph, y, mask, test_mask, device):
-    """
-    Evaluate the model on a test set.
+    optimizer.zero_grad()
+    data = data.to(device)
+    out, _ = model(data.x_dict, data.edge_index_dict, target_node_type, device)
+    mask = data[target_node_type].train_mask
+    loss = F.cross_entropy(out[mask], data[target_node_type].y[mask])
+    loss.backward()
+    optimizer.step()
+    
+    return loss.item()
 
-    Parameters:
-    - model: The PyTorch model to evaluate.
-    - graph: The graph data.
-    - y: The ground truth labels.
-    - mask: The mask to apply on the labels.
-    - test_mask: The mask for the test set.
-    - device: The device to run the model on (CPU or GPU).
+def mini_batch_train_nc(model, train_loader, optimizer, target_node_type, device) -> float:
+    model.train()
 
-    Returns:
-    - float: The accuracy of the model on the test set.
-    - float: The loss on the test set.
-    """
-    model.eval()  # Set the model to evaluation mode
-    with torch.no_grad():  # Context manager to disable gradient calculation
-        out = model(graph)
-        loss_function = torch.nn.CrossEntropyLoss().to(device)
-        loss = loss_function(out[mask], y[mask])
+    total_examples = 0
+    total_loss = 0
 
-    _, pred = out.max(dim=1)
-    correct = int(pred[mask].eq(y[mask]).sum().item())
-    acc = correct / int(test_mask.sum())
-
-    return acc, loss.item()
-
-
-def train(model, graph, y, train_mask, val_mask, test_mask, epochs, device):
-    """
-    Train the model.
-
-    Parameters:
-    - model: The PyTorch model to train.
-    - graph: The graph data.
-    - y: The ground truth labels.
-    - train_mask: The mask for the training set.
-    - val_mask: The mask for the validation set.
-    - test_mask: The mask for the test set.
-    - epochs: The number of epochs to train for.
-    - device: The device to run the model on (CPU or GPU).
-
-    Returns:
-    - float: The best accuracy achieved on the test set.
-    """
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=1e-4)
-    loss_function = torch.nn.CrossEntropyLoss().to(device)
-    min_epochs = 5
-    best_val_acc = 0
-    final_best_acc = 0
-
-    for epoch in tqdm(range(epochs)):
-        f = model(graph)
-        loss = loss_function(f[train_mask], y[train_mask])
+    for batch in train_loader:
+        # print("2")
+        # print(batch)
         optimizer.zero_grad()
+        # batch = batch.to_homogeneous()
+        # print(batch)
+        batch = batch.to(device)
+        out, processed = model(batch.x_dict, batch.edge_index_dict, target_node_type, device)
+        if not processed:
+            continue
+        
+        mask = batch[target_node_type].train_mask
+        loss = F.cross_entropy(out[mask], batch[target_node_type].y[mask])
         loss.backward()
         optimizer.step()
 
-        val_acc, _val_loss = test(model, graph, y, val_mask, test_mask, device)
-        test_acc, _test_loss = test(model, graph, y, test_mask, test_mask, device)
-        if epoch + 1 > min_epochs and val_acc > best_val_acc:
-            best_val_acc = val_acc
-            final_best_acc = test_acc
-        tqdm.write('epoch: {:03d}, train_loss: {:.5f}, val_acc: {:.3f}, test_acc {:.3f}'.format(
-            epoch, loss.item(), val_acc, test_acc))
-        
-        # state_dict = model.state_dict()
-        # compressed = bz2.compress(pickle.dumps(state_dict))
-        # logging.info('HAN compressed parameters:')
-        # print(compressed)
-        # print(type(compressed))
+        batch_size = mask.sum().item()
+        total_examples += batch_size
+        total_loss += float(loss) * batch_size
 
-    return model, graph, final_best_acc
+    return total_loss / total_examples
+
+@torch.no_grad()
+def full_test_nc(model, data, target_node_type, device) -> List[float]:
+    model.eval()
+
+    out, _ = model(data.x_dict, data.edge_index_dict, target_node_type, device)
+    preds = out.argmax(dim=-1)
+    labels = data[target_node_type].y
+
+    return preds, labels
+
+@torch.no_grad()
+def mini_batch_test_nc(model, test_loader, target_node_type, device) -> List[float]:
+    model.eval()
+
+    all_preds = []
+    all_labels = []
+
+    for batch in test_loader:
+        batch = batch.to(device)
+        out, processed = model(batch.x_dict, batch.edge_index_dict, target_node_type, device)
+        if not processed:
+            continue
+        
+        preds = out.argmax(dim=-1)  # 将预测移动到CPU并转换为numpy数组
+
+        # 由于批处理中可能存在不同的mask，我们需要单独处理
+        # 这里我们收集所有的预测和标签，不区分train/val/test
+        labels = batch[target_node_type].y  # 同样将标签移动到CPU并转换为numpy数组
+
+        all_preds.extend(preds)
+        all_labels.extend(labels)
+
+    return all_preds, all_labels
+
+
+# not federated training for node classification
+def no_fed_train_nc(model, data, optimizer, target_node_type, is_mini_batch, device) -> float:
+    if is_mini_batch:
+        print(data[target_node_type].train_mask.nonzero(as_tuple=True)[0].shape)
+        train_idx = data[target_node_type].train_mask.nonzero(as_tuple=True)[0]
+        train_loader = NeighborLoader(data, num_neighbors=[32]*3, input_nodes=(target_node_type, train_idx), batch_size=128, shuffle=False)
+        
+        return mini_batch_train_nc(model, train_loader, optimizer, target_node_type, device)
+    else:
+        return full_train_nc(model, data, optimizer, target_node_type, device)
+
+# not federated testing for node classification
+def no_fed_test_nc(model, data, target_node_type, is_mini_batch, device) -> List[float]:
+    if is_mini_batch:
+        test_idx = data[target_node_type].test_mask.nonzero(as_tuple=True)[0]
+        test_loader = NeighborLoader(data, num_neighbors=[32]*3, input_nodes=(target_node_type, test_idx), batch_size=128, shuffle=False)
+        return mini_batch_test_nc(model, test_loader, target_node_type, device)
+    else:
+        return full_test_nc(model, data, target_node_type, device)

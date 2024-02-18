@@ -102,3 +102,13 @@ def get_data_target_node_type(dataset: str):
         return "paper"
     else:
         return None
+
+def get_is_need_mini_batch(dataset: str):
+    if dataset == "DBLP":
+        return False
+    elif dataset == "IMDB":
+        return False
+    elif dataset == "OGB_MAG":
+        return True
+    else:
+        return False

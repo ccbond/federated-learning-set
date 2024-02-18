@@ -1,6 +1,11 @@
 # federated-learning-set
 A set about fedreated learning tutriols.
 
+## Start
+pip install pyg-lib==0.3 -f https://data.pyg.org/whl/torch-2.1.0+cu118.html
+
+pyg-lib 0.4.0 最新修改了neighobr sampler的接口，导致代码无法运行，所以需要降级安装0.3.0版本
+
 ## Support methods
 1. No-fed heterogeneous graph neural network learning
  - [x] HAN

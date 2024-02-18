@@ -22,5 +22,9 @@ class HAN(nn.Module):
     def forward(self, x_dict, edge_index_dict, labeled_class):
         for _, conv in enumerate(self.convs):
             x_dict = conv(x_dict, edge_index_dict)
+            
+        if labeled_class not in x_dict or x_dict[labeled_class] is None:
+            return torch.tensor([]), False
+
         x_dict = self.lin(x_dict[labeled_class])
-        return x_dict 
+        return x_dict, True
