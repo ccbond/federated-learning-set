@@ -7,7 +7,8 @@ from torch_geometric.loader import NeighborLoader
 def full_train_nc(model, data, optimizer, target_node_type, device) -> float:
     model.train()
 
-    optimizer.zero_grad()
+    optimizer.zero_grad()        
+    
     data = data.to(device)
     out, _ = model(data.x_dict, data.edge_index_dict, target_node_type)
     mask = data[target_node_type].train_mask
@@ -23,12 +24,8 @@ def mini_batch_train_nc(model, train_loader, optimizer, target_node_type, device
     total_examples = 0
     total_loss = 0
 
-    for batch in train_loader:
-        # print("2")
-        # print(batch)
+    for batch in tqdm(train_loader):
         optimizer.zero_grad()
-        # batch = batch.to_homogeneous()
-        # print(batch)
         batch = batch.to(device)
         out, processed = model(batch.x_dict, batch.edge_index_dict, target_node_type)
         if not processed:
@@ -83,11 +80,10 @@ def mini_batch_test_nc(model, test_loader, target_node_type, device):
 # not federated training for node classification
 def no_fed_train_nc(model, data, optimizer, target_node_type, is_mini_batch, device) -> float:
     if is_mini_batch:
-        print(data[target_node_type].train_mask.nonzero(as_tuple=True)[0].shape)
         train_idx = data[target_node_type].train_mask.nonzero(as_tuple=True)[0]
         train_loader = NeighborLoader(data, num_neighbors=[32]*3, input_nodes=(target_node_type, train_idx), batch_size=128, shuffle=False)
         
-        return mini_batch_train_nc(model, train_loader, optimizer, target_node_type)
+        return mini_batch_train_nc(model, train_loader, optimizer, target_node_type, device)
     else:
         return full_train_nc(model, data, optimizer, target_node_type, device)
 

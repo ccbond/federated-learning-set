@@ -8,7 +8,7 @@ from torch_geometric.nn import HANConv
 
 class HAN(nn.Module):
     def __init__(self, in_channels: Union[int, Dict[str, int]],
-                 out_channels: int, hidden_channels=16, heads=4, n_layers=2, metadata=None):
+                 out_channels: int, hidden_channels=16, heads=4, n_layers=1, metadata=None):
         super().__init__()
         self.convs = nn.ModuleList()
         self.relu = F.relu
@@ -20,11 +20,14 @@ class HAN(nn.Module):
         self.lin = torch.nn.Linear(hidden_channels, out_channels)
 
     def forward(self, x_dict, edge_index_dict, labeled_class):
-        for _, conv in enumerate(self.convs):
-            x_dict = conv(x_dict, edge_index_dict)
-            
         if labeled_class not in x_dict or x_dict[labeled_class] is None:
             return torch.tensor([]), False
+        
+        for _, conv in enumerate(self.convs):
+            if labeled_class not in x_dict or x_dict[labeled_class] is None:
+                return torch.tensor([]), False
+            x_dict = conv(x_dict, edge_index_dict)
 
         x_dict = self.lin(x_dict[labeled_class])
         return x_dict, True
+ 

@@ -42,8 +42,8 @@ def no_fed_node_classification(model_name: str, dataset_name: str, epochs: int):
             model = init_model(model_type, num_classes, data)
             data, model = data.to(device), model.to(device)
 
-            with torch.no_grad():  # Initialize lazy modules.                    
-                model(data.x_dict, data.edge_index_dict, target_node_type)
+            # with torch.no_grad():  # Initialize lazy modules.                    
+            #     model(data.x_dict, data.edge_index_dict, target_node_type)
 
             optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=0.001)
 
