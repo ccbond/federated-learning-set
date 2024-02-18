@@ -30,8 +30,7 @@ def no_fed_node_classification(model_name: str, dataset_name: str):
     is_mini_batch = get_is_need_mini_batch(dataset_name)
     print(f"Is mini batch: {is_mini_batch}")
 
-    best_macri_fl = 0
-    start_patience = patience = 100
+
 
     for model_type in models:
         for dataset in datasets:
@@ -49,10 +48,13 @@ def no_fed_node_classification(model_name: str, dataset_name: str):
             #     model(data.x_dict, data.edge_index_dict, target_node_type)
 
             optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=0.001)
-            epochs = 0
+
+            epoch = 0
+            best_macri_fl = 0
+            start_patience = patience = 100
 
             while True:
-                epochs += 1
+                epoch += 1
                 loss = no_fed_train_nc(model, data, optimizer, target_node_type, is_mini_batch, device)
                 preds, labels = no_fed_test_nc(model, data, target_node_type, is_mini_batch, device)
 
