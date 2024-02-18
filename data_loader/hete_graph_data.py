@@ -24,8 +24,12 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
     
     if data_name == "DBLP":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/DBLP')
-        metapaths = [[("paper", "term"), ("term", "paper")],
-                     [("author", "paper"), ("paper", "author")]]
+
+        metapaths = [[("author", "paper"),("paper", "term"),("term", "paper"),("paper", "author")],
+                [("author", "paper"), ("paper", "author")],[("author", "paper"),("paper", "conference"),("conference", "paper"),("paper", "author")]]
+        # metapaths = [[("paper", "term"), ("term", "paper")],
+        #     [("author", "paper"), ("paper", "author")]]
+            
         transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = DBLP(path, transform=transform, )
