@@ -41,19 +41,20 @@ def test(model, data, target_node_type) -> List[float]:
 
 def no_fed_node_classification(model_name: str, dataset_name: str, epochs: int):
     if dataset_name == 'all':
-        all_datasets = all_datasets
+        datasets = all_datasets
     else:
-        all_datasets = [dataset_name]
+        datasets = [dataset_name]
     
     if model_name == 'all':
-        model_types = all_models
+        models = all_models
     else:
-        model_types = [model_name]
+        models = [model_name]
 
-    for model_type in model_types:
-        for dataset in all_datasets:
+    for model_type in models:
+        for dataset in datasets:
             logging.info(f"Loading dataset: {dataset}")
-            data = load_full_dataset(dataset, True, True)
+            data = load_full_dataset(dataset, True, True, True)
+            logging.info(data)
             target_node_type = get_data_target_node_type(dataset)
             
             num_classes = data[target_node_type].y.max().item() + 1

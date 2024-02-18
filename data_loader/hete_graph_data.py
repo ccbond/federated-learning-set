@@ -132,7 +132,18 @@ def load_fed_hete_graph_data(dataset_name, device, client_nums, data_dir='/data/
 
 all_datasets = ["DBLP", "IMDB", "OGB_MAG", "AmazonBook", "MovieLens", "AMiner",  "Taobao"]
 
-def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnected_node_types: bool): 
+
+def add_zero_features_for_graph(data, feature_dim = 128):
+    for node_type in data.node_types:
+        if not hasattr(data[node_type], 'x') or data[node_type].x is None:
+            num_nodes = data[node_type].num_nodes
+            data[node_type].x = torch.zeros((num_nodes, feature_dim), dtype=torch.float)
+    return data
+
+
+def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnected_node_types: bool, add_zero_features: bool = False): 
+    data = None
+    
     if data_name == "DBLP":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/DBLP')
         metapaths = [[("paper", "term"), ("term", "paper")],
@@ -141,7 +152,6 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = DBLP(path, transform=transform)
         data = dataset[0]
-        return data
     
     elif data_name == "IMDB":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/IMDB')
@@ -151,8 +161,7 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = IMDB(path, transform=transform)
         data = dataset[0]
-        return data
-    
+
     elif data_name == "OGB_MAG":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/OGB_MAG')
         metapaths = [[('author', 'paper'), ('paper', 'paper')],
@@ -161,7 +170,6 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = OGB_MAG(path, transform=transform)
         data = dataset[0]
-        return data
     
     elif data_name == "MovieLens":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/MovieLens')
@@ -171,7 +179,6 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = MovieLens(path, transform=transform)
         data = dataset[0]
-        return data
     
     elif data_name == "Taobao":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/Taobao')
@@ -181,7 +188,6 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = Taobao(path, transform=transform)
         data = dataset[0]
-        return data
     
     elif data_name == "AmazonBook":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/AmazonBook')
@@ -190,7 +196,6 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = AmazonBook(path, transform=transform)
         data = dataset[0]
-        return data
     
     elif data_name == "AMiner":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/AMiner')
@@ -200,10 +205,11 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = AMiner(path, transform=transform)
         data = dataset[0]
-        return data
 
-    else:
-        return None
+    if add_zero_features:
+        data = add_zero_features_for_graph(data)
+
+    return data
 
 def get_data_target_node_type(dataset: str):
     if dataset == "DBLP":
