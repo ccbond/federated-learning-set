@@ -23,7 +23,7 @@ logging.info("Device: %s", device.type)
 @click.command()
 @click.option('--model', default="han", help='The model name')
 @click.option('--dataset', default="DBLP", help='The dataset name')
-def nofed(model, dataset, epochs):
+def nofed(model, dataset):
     no_fed_node_classification(model, dataset)
     print("No fed run finish.")    
 
