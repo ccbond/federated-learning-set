@@ -45,10 +45,10 @@ def mini_batch_train_nc(model, train_loader, optimizer, target_node_type, device
 @torch.no_grad()
 def full_test_nc(model, data, target_node_type):
     model.eval()
-
+    mask = data[target_node_type].test_mask
     out, _ = model(data.x_dict, data.edge_index_dict, target_node_type)
-    preds = out.argmax(dim=-1)
-    labels = data[target_node_type].y
+    preds = out[mask].argmax(dim=-1)
+    labels = data[target_node_type].y[mask]
 
     return preds, labels
 
