@@ -3,6 +3,7 @@ import click
 import torch
 import logging
 import datetime
+from train.fed_train import fed_node_classification
 from train.not_fed_train import no_fed_node_classification
 from tools.show_and_store_dataset_info import show_and_store_dataset_info
 
@@ -31,10 +32,9 @@ def nofed(model, dataset):
 @click.command()
 @click.option('--model', default="han", help='The model name')
 @click.option('--dataset', default="DBLP", help='The dataset name')
-@click.option('--epochs', default=100, help='The rounds of training')
-@click.option('--train_type', default="fed", help='The type of training')
-@click.option('--client_nums', default=10, help='The number of clients')
-def fed(model, dataset, epochs, train_type, client_nums):
+@click.option('--fedtype', default="fedavg", help='The federated type of training')
+def fed(model, dataset, fedtype):
+    fed_node_classification(model, dataset, fedtype)
     print("Fed run finish.")
 
 @click.command()
@@ -49,6 +49,7 @@ def cli():
 
 cli.add_command(get_datasets)
 cli.add_command(nofed)
+cli.add_command(fed)
 
 
 if __name__ == '__main__':

@@ -55,11 +55,10 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
         dataset = OGB_MAG(path, transform=transform, preprocess='metapath2vec')
         data = dataset[0]
         
-        
     elif data_name == "LastFM":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/LastFM')
         metapaths = [[('user', 'artist'), ('artist', 'user')], [('user', 'artist'),('artist', 'tag'), ('tag', 'artist'), ('artist', 'user')],
-                     [('artist', 'tag'), ('tag', 'artist')], [('artist', 'user'), ('user', 'artist')], [('artist', 'user'),('user', 'user') ('user', 'artist')]]
+                     [('artist', 'tag'), ('tag', 'artist')], [('artist', 'user'), ('user', 'artist')], [('artist', 'user'),('user', 'user'), ('user', 'artist')]]
         transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
                                    drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = LastFM(path, transform=transform)

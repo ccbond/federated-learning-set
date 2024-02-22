@@ -3,20 +3,23 @@ import copy
 import logging
 import time
 
+from sklearn.metrics import f1_score
+
 from utils import fmodule
 import torch
 import torch.nn.functional as F
 
 
 class BasicServer:
-    def __init__(self, option, model, clients, data, device):
+    def __init__(self, option, model, clients, data, target_node_type, device):
         self.device = device
         self.data = data.to(self.device)
+        self.target_node_type = target_node_type
         self.model = model.to(self.device)
         self.clients = clients
         self.num_clients = len(clients)
         self.num_rounds = option['num_rounds']
-        self.decay_rate= option['learning_rate_decay']
+        self.decay_rate= option['learning_rate']
         self.current_round = -1
         self.option = option
         self.set_client_server()
@@ -33,6 +36,15 @@ class BasicServer:
             # decay learning rate
             self.global_lr_scheduler(round)
             iter_end_time = time.time()
+            preds, labels = self.test()
+
+            preds = preds.cpu().numpy()
+            labels = labels.cpu().numpy()
+
+            macro_f1 = f1_score(labels, preds, average='macro')
+            micro_f1 = f1_score(labels, preds, average='micro')
+
+            logging.info(f'Epoch: {round:03d}, Macro F1: {macro_f1:.4f}, Micro F1: {micro_f1:.4f}')
             logging.info(f"Time cost for round {round}: {iter_end_time - iter_start_time}")
         
         total_end_time = time.time()
@@ -44,7 +56,7 @@ class BasicServer:
         # training
         models = self.communicate(self.clients)['model']
         # aggregate
-        self.model = self.aggregate(models, p=[1.0 * 1 / self.num_clients])
+        self.model = self.aggregate(models, p=[])
         return
             
     def communicate(self, clients):
@@ -108,8 +120,9 @@ class BasicServer:
         elif self.lr_scheduler_type == 1:
             """eta_{round+1} = eta_0/(round+1)"""
             self.lr = self.option['learning_rate']*1.0/(current_round+1)
-            for c in self.clients:
+            for c in self.clients.values():
                 c.set_learning_rate(self.lr)
+                
                 
     def aggregate(self, models: list, p=[]):
         """
@@ -129,26 +142,35 @@ class BasicServer:
         N/K * Σpk * model_k             |1/K * Σmodel_k             |(1-Σpk) * w_old + Σpk * model_k  |Σ(pk/Σpk) * model_k
         """
         if len(models) == 0: return self.model
-        if self.aggregation_option == 'weighted_scale':
-            K = len(models)
-            N = self.num_clients
-            return fmodule._model_sum([model_k * pk for model_k, pk in zip(models, p)]) * N / K
-        elif self.aggregation_option == 'uniform':
-            return fmodule._model_average(models)
-        elif self.aggregation_option == 'weighted_com':
-            w = fmodule._model_sum([model_k * pk for model_k, pk in zip(models, p)])
-            return (1.0-sum(p))*self.model + w
-        else:
-            sump = sum(p)
-            p = [pk/sump for pk in p]
-            return fmodule._model_sum([model_k * pk for model_k, pk in zip(models, p)])
+        # if self.aggregation_option == 'weighted_scale':
+        #     K = len(models)
+        #     N = self.num_clients
+        #     return fmodule._model_sum([model_k * pk for model_k, pk in zip(models, p)]) * N / K
+        # elif self.aggregation_option == 'uniform':
+        #     return fmodule._model_average(models)
+        # elif self.aggregation_option == 'weighted_com':
+        #     w = fmodule._model_sum([model_k * pk for model_k, pk in zip(models, p)])
+        #     return (1.0-sum(p))*self.model + w
+        # else:
+        sump = sum(p)
+        p = [pk/sump for pk in p]
+        return fmodule._model_sum(models)
         
     def set_client_server(self):
-        for c in self.clients:
+        for c in self.clients.values():
             c.set_server(self)
 
+    def test(self):
+        self.model.eval()
+        mask = self.data[self.target_node_type].test_mask
+        out, _ = self.model(self.data.x_dict, self.data.edge_index_dict, self.target_node_type)
+        preds = out[mask].argmax(dim=-1)
+        labels = self.data[self.target_node_type].y[mask]
+        return preds, labels
+
+
 class BasicClient():
-    def __init__(self, option, name='', train_data=None, model=None, device=None):
+    def __init__(self, option, name='', train_data=None, model=None, optimizer=None, device=None):
         self.device = device
         self.name = name
         # create local dataset
@@ -166,17 +188,18 @@ class BasicClient():
         self.model = None
         # server
         self.server = None
-        self.target_node_type = None
-        self.optimizer = None
+        self.optimizer = optimizer
 
-    @fmodule.with_multi_gpus
     def train(self, model):
         model.train()
         optimizer = self.optimizer
         
         optimizer.zero_grad()
-        data_loader = self.data_loader.to(self.device)
+        data_loader = self.train_data.to(self.device)
         out, _ = model(data_loader.x_dict, data_loader.edge_index_dict, self.target_node_type)
+        # print("train dataloader")
+        # print(data_loader)
+        print(self.target_node_type)
         mask = data_loader[self.target_node_type].train_mask
         loss = F.cross_entropy(out[mask], data_loader[self.target_node_type].y[mask])
         loss.backward()
@@ -184,11 +207,9 @@ class BasicClient():
         
         return loss
 
-    @ fmodule.with_multi_gpus
     def test(self, model):
         model.eval()
         data = self.data_loader.to(self.device)
-
         
         out, _ = model(data.x_dict, data.edge_index_dict, self.target_node_type)
         preds = out.argmax(dim=-1)
@@ -220,7 +241,7 @@ class BasicClient():
         :return:
             client_pkg: the package to be send to the server
         """
-        model = self.unpack(svr_pkg)
+        model = self.unpack(svr_pkg).to(self.device)
         self.train(model)
         cpkg = self.pack(model)
         return cpkg

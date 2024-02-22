@@ -134,20 +134,20 @@ def _model_from_tensor(mt, model_class=None):
 
 def _model_sum(ms):
     if len(ms)==0: return None
-    op_with_graph = sum([mi.ingraph for mi in ms]) > 0
+    # op_with_graph = sum([mi.ingraph for mi in ms]) > 0
     res = ms[0].__class__().to(ms[0].get_device())
-    if op_with_graph:
-        mlks = [get_module_from_model(mi) for mi in ms]
-        mlr = get_module_from_model(res)
-        for n in range(len(mlr)):
-            mpks = [mlk[n]._parameters for mlk in mlks]
-            rd = _modeldict_sum(mpks)
-            for l in mlr[n]._parameters.keys():
-                if mlr[n]._parameters[l] is None: continue
-                mlr[n]._parameters[l] = rd[l]
-        res.op_with_graph()
-    else:
-        _modeldict_cp(res.state_dict(), _modeldict_sum([mi.state_dict() for mi in ms]))
+    # if op_with_graph:
+    #     mlks = [get_module_from_model(mi) for mi in ms]
+    #     mlr = get_module_from_model(res)
+    #     for n in range(len(mlr)):
+    #         mpks = [mlk[n]._parameters for mlk in mlks]
+    #         rd = _modeldict_sum(mpks)
+    #         for l in mlr[n]._parameters.keys():
+    #             if mlr[n]._parameters[l] is None: continue
+    #             mlr[n]._parameters[l] = rd[l]
+    #     res.op_with_graph()
+    # else:
+    _modeldict_cp(res.state_dict(), _modeldict_sum([mi.state_dict() for mi in ms]))
     return res
 
 def _model_average(ms = [], p = []):
