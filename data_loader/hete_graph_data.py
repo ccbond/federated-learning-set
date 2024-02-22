@@ -5,10 +5,10 @@ import torch.nn.functional as F
 from torch import nn
 
 import torch_geometric.transforms as T
-from torch_geometric.datasets import DBLP, AMiner, OGB_MAG, MovieLens, IMDB, Taobao, AmazonBook
+from torch_geometric.datasets import DBLP, AMiner, OGB_MAG, MovieLens, IMDB, Taobao, AmazonBook, LastFM
 from torch_geometric.nn import HANConv
 
-all_datasets = ["DBLP", "IMDB", "OGB_MAG", "AmazonBook", "MovieLens", "AMiner",  "Taobao"]
+all_datasets = ["DBLP", "IMDB", "OGB_MAG", "LastFM" "AmazonBook", "MovieLens", "AMiner",  "Taobao"]
 
 
 def add_zero_features_for_graph(data, feature_dim = 128):
@@ -54,6 +54,16 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = OGB_MAG(path, transform=transform, preprocess='metapath2vec')
         data = dataset[0]
+        
+        
+    elif data_name == "LastFM":
+        path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/LastFM')
+        metapaths = [[('user', 'artist'), ('artist', 'user')], [('user', 'artist'),('artist', 'tag'), ('tag', 'artist'), ('artist', 'user')],
+                     [('artist', 'tag'), ('tag', 'artist')], [('artist', 'user'), ('user', 'artist')], [('artist', 'user'),('user', 'user') ('user', 'artist')]]
+        transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
+                                   drop_unconnected_node_types=drop_unconnected_node_types)
+        dataset = LastFM(path, transform=transform)
+        data = dataset[0] 
     
     elif data_name == "MovieLens":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/MovieLens')
