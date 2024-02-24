@@ -18,6 +18,10 @@ class HAN(nn.Module):
             self.convs.append(HANConv(hidden_channels, hidden_channels, heads=heads, dropout=0.6,
                                       metadata=metadata))
         self.lin = torch.nn.Linear(hidden_channels, out_channels)
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.metadata = metadata
+        
 
     def forward(self, x_dict, edge_index_dict, labeled_class):
         if labeled_class not in x_dict or x_dict[labeled_class] is None:
@@ -31,3 +35,14 @@ class HAN(nn.Module):
         x_dict = self.lin(x_dict[labeled_class])
         return x_dict, True
  
+    def get_in_channels(self):
+        return self.in_channels
+    
+    def get_out_channels(self):
+        return self.out_channels
+    
+    def get_metadata(self):
+        return self.metadata
+    
+    def get_state_dict_keys(self):
+        return list(self.state_dict().keys())

@@ -3,6 +3,7 @@ import click
 import torch
 import logging
 import datetime
+from model.show import show_model_info
 from train.fed_train import fed_node_classification
 from train.not_fed_train import no_fed_node_classification
 from tools.show_and_store_dataset_info import show_and_store_dataset_info
@@ -43,6 +44,13 @@ def get_datasets(dataset):
     click.echo("Show and store dataset info")
     show_and_store_dataset_info(dataset)
 
+@click.command()
+@click.option('--model', default="han", help='The model name')
+@click.option('--dataset', default="IMDB", help='The dataset name')
+def show_model(model, dataset):
+    click.echo("Show model info")
+    show_model_info(model, dataset)
+
 @click.group()
 def cli():
     pass    
@@ -50,6 +58,7 @@ def cli():
 cli.add_command(get_datasets)
 cli.add_command(nofed)
 cli.add_command(fed)
+cli.add_command(show_model)
 
 
 if __name__ == '__main__':

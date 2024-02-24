@@ -14,7 +14,7 @@ def init_server(fed_method, model, data, target_node_type, device):
     num_clients = len(data_list)
 
     lr = 0.02
-    weight_decay = 0.001
+    weight_decay = 0.1
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
     client_option = {'batch_size': 128, 'learning_rate': lr, 'weight_decay': weight_decay, 'num_steps': 10, 'epochs': 100, 'target_node_type': target_node_type}
@@ -23,12 +23,12 @@ def init_server(fed_method, model, data, target_node_type, device):
         clients = {}
         for i in range(num_clients):
             idx = str(i)
-            
+
             client = FedAvgClient(option=client_option, name=idx, train_data=data_list[i], model=model, optimizer=optimizer, device=device)
             clients[idx] = client
         
-        server_option = {'num_rounds': 100, 'learning_rate': 0.001}
-        server = FedAvgServer(option=server_option, model=model, clients=clients, data=data, device=device)
+        server_option = {'num_rounds': 500, 'learning_rate': 0.02}
+        server = FedAvgServer(option=server_option, model=model, clients=clients, data=data, target_node_type=target_node_type, device=device)
         return server
     
     else:

@@ -1,3 +1,4 @@
+import copy
 import torch
 from torch import nn
 
@@ -116,39 +117,46 @@ def element_wise_func(m, func):
         _modeldict_cp(res.state_dict(), _modeldict_element_wise(m.state_dict(), func))
     return res
 
-def _model_to_tensor(m):
-    return torch.cat([mi.data.view(-1) for mi in m.parameters()])
+def model_to_tensor(m):
+    return torch.cat([mi.data.view(-1) for mi in m.state_dict().values()]), m.state_dict().keys()
 
-def _model_from_tensor(mt, model_class=None):
-    if model_class is None: model_class = Model
-    res = model_class().to(mt.device)
-    cnt = 0
-    end = 0
-    with torch.no_grad():
-        for i, p in enumerate(res.parameters()):
-            beg = 0 if cnt == 0 else end
-            end = end + p.view(-1).size()[0]
-            p.data = mt[beg:end].contiguous().view(p.data.size())
-            cnt += 1
-    return res
+def model_from_flattened_tensor(tensor, model, state_dict_keys):
+    pointer = 0
+    state_dict = model.state_dict()
+    for key in state_dict_keys:
+        # 从state_dict中获取每个参数的形状
+        param_shape = state_dict[key].shape
+        num_param = state_dict[key].numel()
+        # 从一维张量中切分出当前参数的张量部分
+        param_data = tensor[pointer:pointer + num_param]
+        # 更新索引位置
+        pointer += num_param
+        # 重塑张量并更新模型的state_dict
+        # print(param_shape)
+        # print(type(param_data))
+        # print(key) 
+        # # print(param_data)
+        # print(pointer, num_param)
+        state_dict[key] = param_data.view(param_shape)
+        # 使用更新后的state_dict来更新模型的参数
+    model.load_state_dict(state_dict)
+    return model
 
-def _model_sum(ms):
-    if len(ms)==0: return None
-    # op_with_graph = sum([mi.ingraph for mi in ms]) > 0
-    res = ms[0].__class__().to(ms[0].get_device())
-    # if op_with_graph:
-    #     mlks = [get_module_from_model(mi) for mi in ms]
-    #     mlr = get_module_from_model(res)
-    #     for n in range(len(mlr)):
-    #         mpks = [mlk[n]._parameters for mlk in mlks]
-    #         rd = _modeldict_sum(mpks)
-    #         for l in mlr[n]._parameters.keys():
-    #             if mlr[n]._parameters[l] is None: continue
-    #             mlr[n]._parameters[l] = rd[l]
-    #     res.op_with_graph()
-    # else:
-    _modeldict_cp(res.state_dict(), _modeldict_sum([mi.state_dict() for mi in ms]))
-    return res
+def model_mean(ms):
+    if len(ms) == 0:
+        return None
+
+    model_param = []
+    
+    # Only append the tensor part of the return value
+    for _idx, m in ms.items():
+        model_param.append(m[0])
+    
+    summed_tensor = torch.stack(model_param).sum(dim=0)
+    average_tensor = summed_tensor / len(model_param)
+
+    return average_tensor
+
 
 def _model_average(ms = [], p = []):
     if len(ms)==0: return None

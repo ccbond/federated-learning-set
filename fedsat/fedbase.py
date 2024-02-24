@@ -16,6 +16,7 @@ class BasicServer:
         self.data = data.to(self.device)
         self.target_node_type = target_node_type
         self.model = model.to(self.device)
+        self.model_state_dict_keys = model.get_state_dict_keys()
         self.clients = clients
         self.num_clients = len(clients)
         self.num_rounds = option['num_rounds']
@@ -23,8 +24,19 @@ class BasicServer:
         self.current_round = -1
         self.option = option
         self.set_client_server()
+        
+    def __str__(self) -> str:
+            return (
+                f"BasicServer(\n"
+                f"  Device: {self.device},\n"
+                f"  Target Node Type: {self.target_node_type},\n"
+                f"  Number of Clients: {self.num_clients},\n"
+                f"  Number of Rounds: {self.num_rounds},\n"
+                f"  Current Round: {self.current_round},\n"
+                f")"
+            ) 
  
-    def run(self):
+    def run(self):        
         logging.info(f"Total Time Cost")
         total_start_time = time.time()
         for round in range(self.num_rounds + 1):
@@ -35,6 +47,9 @@ class BasicServer:
             self.iterate()
             # decay learning rate
             self.global_lr_scheduler(round)
+            # update client model
+            self.update_clients()
+            
             iter_end_time = time.time()
             preds, labels = self.test()
 
@@ -51,53 +66,39 @@ class BasicServer:
         logging.info("=================END================")
         logging.info('Total time cost: {}'.format(total_end_time - total_start_time))
         return
-            
+
+    def get_agg_model_tensor(self):
+        return fmodule.model_to_tensor(self.model)
+
     def iterate(self):
-        # training
-        models = self.communicate(self.clients)['model']
-        # aggregate
-        self.model = self.aggregate(models, p=[])
+        model_tensor_dict = self.communicate(self.clients)
+        agg_model_tensor = self.aggregate(model_tensor_dict)
+
+        agg_model = copy.deepcopy(self.model)
+        state_dict_keys = agg_model.get_state_dict_keys()
+
+        agg_model = fmodule.model_from_flattened_tensor(agg_model_tensor, agg_model, state_dict_keys)  # Use agg_model instead of ms[0] for clarity
+        self.model = agg_model
         return
-            
+
     def communicate(self, clients):
-        packages_received_from_clients = []
-        client_package_buffer = {}
-        
-        communicate_clients = list(set(clients))
-        for cid in communicate_clients:client_package_buffer[cid] = None
-        for client_id in communicate_clients:
-            response_from_client_id = self.communicate_with(client_id)
-            packages_received_from_clients.append(response_from_client_id)
-        for i, cid in enumerate(communicate_clients):
-            client_package_buffer[cid] = packages_received_from_clients[i]
-        packages_received_from_clients = [client_package_buffer[cid] for cid in clients]
-        return self.unpack(packages_received_from_clients)
+        c_model_tensor_dict = {}
+        for idx, c in clients.items():
+            model, _loss = c.reply2()
+            model_tensor = fmodule.model_to_tensor(model)
+            c_model_tensor_dict[idx] = model_tensor
+        return c_model_tensor_dict
     
     def communicate_with(self, client_id):
-        svr_pkg = self.pack(client_id)
-        return self.clients[client_id].reply(svr_pkg)
+        svr_pkg = self.pack()
+        return self.clients[client_id].reply(svr_pkg, self.model_state_dict_keys)
             
-    def pack(self, client_id):
-        """
-        Pack the necessary information for the client's local training.
-        Any operations of compression or encryption should be done here.
-        :param
-            client_id: the id of the client to communicate with
-        :return
-            a dict that only contains the global model as default.
-        """
+    def pack(self):
         return {
             "model" : copy.deepcopy(self.model),
         }
 
     def unpack(self, packages_received_from_clients):
-        """
-        Unpack the information from the received packages. Return models and losses as default.
-        :param
-            packages_received_from_clients:
-        :return:
-            res: collections.defaultdict that contains several lists of the clients' reply
-        """
         res = collections.defaultdict(list)
         for cpkg in packages_received_from_clients:
             for pname, pval in cpkg.items():
@@ -105,56 +106,12 @@ class BasicServer:
         return res
 
     def global_lr_scheduler(self, current_round):
-        """
-        Control the step size (i.e. learning rate) of local training
-        :param
-            current_round: the current communication round
-        """
-        if self.lr_scheduler_type == -1:
-            return
-        elif self.lr_scheduler_type == 0:
-            """eta_{round+1} = DecayRate * eta_{round}"""
-            self.lr*=self.decay_rate
-            for c in self.clients:
-                c.set_learning_rate(self.lr)
-        elif self.lr_scheduler_type == 1:
-            """eta_{round+1} = eta_0/(round+1)"""
-            self.lr = self.option['learning_rate']*1.0/(current_round+1)
-            for c in self.clients.values():
-                c.set_learning_rate(self.lr)
+        self.lr = self.option['learning_rate']*1.0/(current_round+1)
+        for c in self.clients.values():
+            c.set_learning_rate(self.lr)
                 
-                
-    def aggregate(self, models: list, p=[]):
-        """
-        Aggregate the locally improved models.
-        :param
-            models: a list of local models
-            p: a list of weights for aggregating
-        :return
-            the averaged result
-
-        pk = nk/n where n=self.data_vol
-        K = |S_t|
-        N = |S|
-        -------------------------------------------------------------------------------------------------------------------------
-         weighted_scale                 |uniform (default)          |weighted_com (original fedavg)   |other
-        ==========================================================================================================================
-        N/K * Σpk * model_k             |1/K * Σmodel_k             |(1-Σpk) * w_old + Σpk * model_k  |Σ(pk/Σpk) * model_k
-        """
-        if len(models) == 0: return self.model
-        # if self.aggregation_option == 'weighted_scale':
-        #     K = len(models)
-        #     N = self.num_clients
-        #     return fmodule._model_sum([model_k * pk for model_k, pk in zip(models, p)]) * N / K
-        # elif self.aggregation_option == 'uniform':
-        #     return fmodule._model_average(models)
-        # elif self.aggregation_option == 'weighted_com':
-        #     w = fmodule._model_sum([model_k * pk for model_k, pk in zip(models, p)])
-        #     return (1.0-sum(p))*self.model + w
-        # else:
-        sump = sum(p)
-        p = [pk/sump for pk in p]
-        return fmodule._model_sum(models)
+    def aggregate(self, model_state_dict: dict):
+        return fmodule.model_mean(model_state_dict)
         
     def set_client_server(self):
         for c in self.clients.values():
@@ -167,6 +124,11 @@ class BasicServer:
         preds = out[mask].argmax(dim=-1)
         labels = self.data[self.target_node_type].y[mask]
         return preds, labels
+    
+    def update_clients(self):
+        for idx, c in self.clients.items():
+            c.set_model(self.model)
+            c.optimizer = torch.optim.Adam(c.model_example.parameters(), lr=c.learning_rate, weight_decay=c.weight_decay)
 
 
 class BasicClient():
@@ -175,6 +137,7 @@ class BasicClient():
         self.name = name
         # create local dataset
         self.train_data = train_data.to(self.device)
+        self.model_example = model
         self.datavol = len(self.train_data)
         self.data_loader = None
         # local calculator
@@ -185,28 +148,24 @@ class BasicClient():
         self.num_steps = option['num_steps']
         self.epochs = option['epochs']
         self.target_node_type = option['target_node_type']
-        self.model = None
         # server
         self.server = None
         self.optimizer = optimizer
 
     def train(self, model):
+        print('train')
         model.train()
         optimizer = self.optimizer
         
         optimizer.zero_grad()
         data_loader = self.train_data.to(self.device)
         out, _ = model(data_loader.x_dict, data_loader.edge_index_dict, self.target_node_type)
-        # print("train dataloader")
-        # print(data_loader)
-        print(self.target_node_type)
         mask = data_loader[self.target_node_type].train_mask
         loss = F.cross_entropy(out[mask], data_loader[self.target_node_type].y[mask])
         loss.backward()
         optimizer.step()
         
-        return loss
-
+        return loss, model
     def test(self, model):
         model.eval()
         data = self.data_loader.to(self.device)
@@ -217,63 +176,15 @@ class BasicClient():
 
         return preds, labels
 
-    def unpack(self, received_pkg):
-        """
-        Unpack the package received from the server
-        :param
-            received_pkg: a dict contains the global model as default
-        :return:
-            the unpacked information that can be rewritten
-        """
-        # unpack the received package
-        return received_pkg['model']
-
-    def reply(self, svr_pkg):
-        """
-        Reply to server with the transmitted package.
-        The whole local procedure should be planned here.
-        The standard form consists of three procedure:
-        unpacking the server_package to obtain the global model,
-        training the global model, and finally packing the updated
-        model into client_package.
-        :param
-            svr_pkg: the package received from the server
-        :return:
-            client_pkg: the package to be send to the server
-        """
-        model = self.unpack(svr_pkg).to(self.device)
-        self.train(model)
-        cpkg = self.pack(model)
-        return cpkg
-
-    def pack(self, model):
-        """
-        Packing the package to be send to the server. The operations of compression
-        of encryption of the package should be done here.
-        :param
-            model: the locally trained model
-        :return
-            package: a dict that contains the necessary information for the server
-        """
-        return {
-            "model" : model,
-        }
-
+    def reply2(self):
+        model = self.model_example.to(self.device)
+        loss, model = self.train(model)
+        return model, loss
 
     def train_loss(self, model):
-        """
-        Get the task specified loss of the model on local training data
-        :param model:
-        :return:
-        """
         return self.test(model,'train')['loss']
 
     def valid_loss(self, model):
-        """
-        Get the task specified loss of the model on local validating data
-        :param model:
-        :return:
-        """
         return self.test(model)[1]['loss']
 
     def set_server(self, server=None):
@@ -281,12 +192,10 @@ class BasicClient():
             self.server = server
 
     def set_learning_rate(self, lr = None):
-        """
-        set the learning rate of local training
-        :param lr:
-        :return:
-        """
         self.learning_rate = lr if lr else self.learning_rate
 
     def set_optimizer(self):
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
+        self.optimizer = torch.optim.Adam(self.model_example.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
+
+    def set_model(self, model):
+        self.model_example = model
