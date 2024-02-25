@@ -13,8 +13,8 @@ def init_server(fed_method, model, data, target_node_type, device):
         data_list.append(data)
     num_clients = len(data_list)
 
-    lr = 0.02
-    weight_decay = 0.1
+    lr = 0.01
+    weight_decay = 0.05
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
     client_option = {'batch_size': 128, 'learning_rate': lr, 'weight_decay': weight_decay, 'num_steps': 10, 'epochs': 100, 'target_node_type': target_node_type}

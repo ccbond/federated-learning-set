@@ -46,7 +46,7 @@ class BasicServer:
             # federated train
             self.iterate()
             # decay learning rate
-            self.global_lr_scheduler(round)
+            # self.global_lr_scheduler(round)
             # update client model
             self.update_clients()
             
