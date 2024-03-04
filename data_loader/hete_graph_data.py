@@ -8,7 +8,8 @@ import torch_geometric.transforms as T
 from torch_geometric.datasets import DBLP, AMiner, OGB_MAG, MovieLens, IMDB, Taobao, AmazonBook, LastFM, HGBDataset
 from torch_geometric.nn import HANConv
 
-all_datasets = ["DBLP", "IMDB", "OGB_MAG", "LastFM" "AmazonBook", "MovieLens", "AMiner",  "Taobao", "HGB-ACM", "HGB-DBLP", "HGB-Freebase", "HGB-IMDB"]
+# all_datasets = ["DBLP", "IMDB", "OGB_MAG", "LastFM" "AmazonBook", "MovieLens", "AMiner",  "Taobao", "HGB-ACM", "HGB-DBLP", "HGB-Freebase", "HGB-IMDB"]
+all_datasets = ["AMiner", "DBLP", "IMDB"]
 
 
 def add_zero_features_for_graph(data, feature_dim = 128):
@@ -37,20 +38,21 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
     
     elif data_name == "HGB-ACM":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/HGBDataset/ACM')
-        # metapaths = [[('movie', 'actor'), ('actor', 'movie')],
-        #             [('movie', 'director'), ('director', 'movie')]]
-        # transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
-        #                         drop_unconnected_node_types=drop_unconnected_node_types)
+        metapaths = [[('paper', 'author'), ('author', 'paper')],
+                    [('paper', 'subject'), ('subject', 'paper')]]
+        transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
+                                drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = HGBDataset(path, "acm")
         data = dataset[0]
 
     elif data_name == "HGB-DBLP":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/HGBDataset/DBLP')
-        # metapaths = [[('movie', 'actor'), ('actor', 'movie')],
-        #             [('movie', 'director'), ('director', 'movie')]]
-        # transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
-        #                         drop_unconnected_node_types=drop_unconnected_node_types)
-        dataset = HGBDataset(path, "dblp")
+        metapaths = [[('author', 'paper'), ('paper', 'author')],
+                    [('author', 'paper'),('paper', 'term'),('term', 'paper'), ('paper', 'author')],
+                    [('author', 'paper'),('paper', 'venue'),('venue', 'paper'), ('paper', 'author')]]
+        transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
+                                drop_unconnected_node_types=drop_unconnected_node_types)
+        dataset = HGBDataset(path, "dblp", transform=transform)
         data = dataset[0]
 
     elif data_name == "HGB-Freebase":
@@ -61,16 +63,14 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
         #                         drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = HGBDataset(path, "freebase")
         data = dataset[0]
-
     elif data_name == "HGB-IMDB":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/HGBDataset/IMDB')
-        # metapaths = [[('movie', 'actor'), ('actor', 'movie')],
-        #             [('movie', 'director'), ('director', 'movie')]]
-        # transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
-        #                         drop_unconnected_node_types=drop_unconnected_node_types)
-        dataset = HGBDataset(path, "imdb")
+        metapaths = [[('movie', 'actor'), ('actor', 'movie')],
+                    [('movie', 'director'), ('director', 'movie')]]
+        transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
+                                drop_unconnected_node_types=drop_unconnected_node_types)
+        dataset = HGBDataset(path, "imdb", transform=transform)
         data = dataset[0]
-
 
     elif data_name == "IMDB":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/IMDB')
@@ -131,8 +131,7 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
     
     elif data_name == "AMiner":
         path = osp.join(osp.dirname(osp.realpath(__file__)), '../data/AMiner')
-        metapaths = [[('author', 'paper'), ('paper', 'author')],
-                    [('author', 'paper'), ('paper', 'venue'), ('venue', 'paper'), ('paper', 'author')]]
+        metapaths = [[('paper', 'author'), ('author', 'paper')],[('paper', 'venue'), ('venue', 'paper')]]
         transform = T.AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=drop_orig_edge_types,
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = AMiner(path, transform=transform)
@@ -152,8 +151,14 @@ def get_data_target_node_type(dataset: str):
         return "paper"
     elif dataset == "AMiner":
         return "author"
-    # elif dataset == "HGB-ACM":
-        
+    elif dataset == "HGB-ACM":
+        return "paper"
+    elif dataset == "HGB-DBLP":
+        return "author"
+    elif dataset == "HGB-Freebase":
+        return "book"
+    elif dataset == "HGB-IMDB":
+        return "movie"
     else:
         return None
 
@@ -166,5 +171,11 @@ def get_is_need_mini_batch(dataset: str):
         return True
     elif dataset == "AMiner":
         return True
+    elif dataset == "HGB-ACM":
+        return True
+    elif dataset == "HGB-IMDB":
+        return True
+    elif dataset == "HGB-DBLP":
+        return True 
     else:
         return False

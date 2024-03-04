@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 from sklearn.metrics import f1_score
 import torch
 from data_loader.hete_graph_data import all_datasets, get_data_target_node_type, get_is_need_mini_batch, load_full_dataset
@@ -19,28 +20,26 @@ def no_fed_node_classification(model_name: str, dataset_name: str):
         models = all_models
     else:
         models = [model_name]
-        
-    is_mini_batch = get_is_need_mini_batch(dataset_name)
-    print(f"Is mini batch: {is_mini_batch}")
-
-
 
     for model_type in models:
         for dataset in datasets:
             logging.info(f"Loading dataset: {dataset}")
+            is_mini_batch = get_is_need_mini_batch(dataset)
+            logging.info(f"Is mini batch: {is_mini_batch}")
+
             data = load_full_dataset(dataset, True, True, True)
             logging.info(data)
             target_node_type = get_data_target_node_type(dataset)
             
-            num_classes = data[target_node_type].y.max().item() + 1
+            num_classes = int(data[target_node_type].y.max().item() + 1)
 
             model = init_model(model_type, num_classes, data)
             data, model = data.to(device), model.to(device)
 
-            # with torch.no_grad():  # Initialize lazy modules.                    
-            #     model(data.x_dict, data.edge_index_dict, target_node_type)
+            with torch.no_grad():  # Initialize lazy modules.                    
+                model(data.x_dict, data.edge_index_dict, target_node_type)
 
-            optimizer = torch.optim.Adam(model.parameters(), lr=0.02, weight_decay=0.001)
+            optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=0.001)
 
             epoch = 0
             best_macri_fl = 0
@@ -57,7 +56,7 @@ def no_fed_node_classification(model_name: str, dataset_name: str):
                 macro_f1 = f1_score(labels, preds, average='macro')
                 micro_f1 = f1_score(labels, preds, average='micro')
 
-                print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Macro F1: {macro_f1:.4f}, Micro F1: {micro_f1:.4f}')
+                logging.info(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Macro F1: {macro_f1:.4f}, Micro F1: {micro_f1:.4f}')
 
                 if best_macri_fl <= macro_f1:
                     patience = start_patience

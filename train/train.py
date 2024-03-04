@@ -1,3 +1,5 @@
+import logging
+import numpy as np
 from tqdm import tqdm
 from typing import List
 import torch
@@ -45,7 +47,7 @@ def mini_batch_train_nc(model, train_loader, optimizer, target_node_type, device
 @torch.no_grad()
 def full_test_nc(model, data, target_node_type):
     model.eval()
-    mask = data[target_node_type].test_mask
+    mask = data[target_node_type].valid_mask
     out, _ = model(data.x_dict, data.edge_index_dict, target_node_type)
     preds = out[mask].argmax(dim=-1)
     labels = data[target_node_type].y[mask]
@@ -82,6 +84,7 @@ def no_fed_train_nc(model, data, optimizer, target_node_type, is_mini_batch, dev
     if is_mini_batch:
         train_idx = data[target_node_type].train_mask.nonzero(as_tuple=True)[0]
         train_loader = NeighborLoader(data, num_neighbors=[32]*3, input_nodes=(target_node_type, train_idx), batch_size=128, shuffle=False)
+        logging.info("The number of clients: %d", len(train_loader))
         
         return mini_batch_train_nc(model, train_loader, optimizer, target_node_type, device)
     else:
