@@ -8,14 +8,6 @@ def save_dataset_info(data_name: str, data: any, path: str):
     # num_val = data[target_node_type].val_mask.sum().item()
     num_test = data[target_node_type].test_mask.sum().item()
 
-    # y = 
-
-    print(f'y: {data[target_node_type].y}')
-    max_y = data[target_node_type].y.max().item()
-    max_sum_y = data[target_node_type].y.sum(dim=1).max().item()
-    print(f'max_y: {max_y}')
-    print(f'max_sum_y: {max_sum_y}')
-
     with open(path, 'a') as f:
         f.write(f"Dataset: {data_name}\n")
         f.write(str(data) + '\n')

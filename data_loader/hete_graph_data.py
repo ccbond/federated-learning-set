@@ -8,8 +8,10 @@ import torch_geometric.transforms as T
 from torch_geometric.datasets import DBLP, AMiner, OGB_MAG, MovieLens, IMDB, Taobao, AmazonBook, LastFM, HGBDataset
 from torch_geometric.nn import HANConv
 
+from data_loader import load_acm
+
 # all_datasets = ["DBLP", "IMDB", "OGB_MAG", "LastFM" "AmazonBook", "MovieLens", "AMiner",  "Taobao", "HGB-ACM", "HGB-DBLP", "HGB-Freebase", "HGB-IMDB"]
-all_datasets = ["AMiner", "DBLP", "IMDB"]
+all_datasets = ["ACM", "DBLP", "IMDB"]
 
 
 def add_zero_features_for_graph(data, feature_dim = 128):
@@ -136,6 +138,9 @@ def load_full_dataset(data_name: str, drop_orig_edge_types: bool, drop_unconnect
                                 drop_unconnected_node_types=drop_unconnected_node_types)
         dataset = AMiner(path, transform=transform)
         data = dataset[0]
+        
+    elif data_name == "ACM":
+        data = load_acm.load_acm_data()
 
     if add_zero_features:
         data = add_zero_features_for_graph(data)
@@ -151,7 +156,7 @@ def get_data_target_node_type(dataset: str):
         return "paper"
     elif dataset == "AMiner":
         return "author"
-    elif dataset == "HGB-ACM":
+    elif dataset == "ACM":
         return "paper"
     elif dataset == "HGB-DBLP":
         return "author"
@@ -171,7 +176,7 @@ def get_is_need_mini_batch(dataset: str):
         return True
     elif dataset == "AMiner":
         return True
-    elif dataset == "HGB-ACM":
+    elif dataset == "ACM":
         return True
     elif dataset == "HGB-IMDB":
         return True

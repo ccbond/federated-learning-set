@@ -1,0 +1,86 @@
+Dataset: ACM
+HeteroData(
+  metapath_dict={
+    (paper, metapath_0, paper)=[2],
+    (paper, metapath_1, paper)=[2],
+  },
+  paper={
+    x=[4025, 1903],
+    y=[4025],
+    train_mask=[4025],
+    val_mask=[4025],
+    test_mask=[4025],
+  },
+  (paper, metapath_0, paper)={ edge_index=[2, 57853] },
+  (paper, metapath_1, paper)={ edge_index=[2, 4350031] }
+)
+Target node type: paper
+Number of classes: 3
+Number of training nodes: 808
+Number of testing nodes: 2816
+
+
+
+Dataset: DBLP
+HeteroData(
+  metapath_dict={
+    (author, metapath_0, author)=[4],
+    (author, metapath_1, author)=[2],
+    (author, metapath_2, author)=[4],
+  },
+  author={
+    x=[4057, 334],
+    y=[4057],
+    train_mask=[4057],
+    val_mask=[4057],
+    test_mask=[4057],
+  },
+  paper={ x=[14328, 4231] },
+  term={ x=[7723, 50] },
+  conference={ num_nodes=20 },
+  (author, to, paper)={ edge_index=[2, 19645] },
+  (paper, to, author)={ edge_index=[2, 19645] },
+  (paper, to, term)={ edge_index=[2, 85810] },
+  (paper, to, conference)={ edge_index=[2, 14328] },
+  (term, to, paper)={ edge_index=[2, 85810] },
+  (conference, to, paper)={ edge_index=[2, 14328] },
+  (author, metapath_0, author)={ edge_index=[2, 7043571] },
+  (author, metapath_1, author)={ edge_index=[2, 11113] },
+  (author, metapath_2, author)={ edge_index=[2, 5000495] }
+)
+Target node type: author
+Number of classes: 4
+Number of training nodes: 400
+Number of testing nodes: 3257
+
+
+
+Dataset: IMDB
+HeteroData(
+  metapath_dict={
+    (movie, metapath_0, movie)=[2],
+    (movie, metapath_1, movie)=[2],
+  },
+  movie={
+    x=[4278, 3066],
+    y=[4278],
+    train_mask=[4278],
+    val_mask=[4278],
+    test_mask=[4278],
+  },
+  director={ x=[2081, 3066] },
+  actor={ x=[5257, 3066] },
+  (movie, to, director)={ edge_index=[2, 4278] },
+  (movie, to, actor)={ edge_index=[2, 12828] },
+  (director, to, movie)={ edge_index=[2, 4278] },
+  (actor, to, movie)={ edge_index=[2, 12828] },
+  (movie, metapath_0, movie)={ edge_index=[2, 85358] },
+  (movie, metapath_1, movie)={ edge_index=[2, 17446] }
+)
+Target node type: movie
+Number of classes: 3
+Number of training nodes: 400
+Number of testing nodes: 3478
+
+
+
