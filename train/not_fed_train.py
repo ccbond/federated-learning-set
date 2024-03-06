@@ -1,8 +1,10 @@
 import logging
 import numpy as np
+from tqdm import tqdm
 from sklearn.metrics import f1_score
 import torch
-from data_loader.hete_graph_data import all_datasets, get_data_target_node_type, get_is_need_mini_batch, load_full_dataset
+from data_loader.hete_graph_data import all_datasets, get_batch_size_list, get_data_target_node_type, get_is_need_mini_batch, load_full_dataset
+from model.show import show_model
 from model.init import all_models, init_model
 from train.train import no_fed_test_nc, no_fed_train_nc
 
@@ -23,50 +25,65 @@ def no_fed_node_classification(model_name: str, dataset_name: str):
 
     for model_type in models:
         for dataset in datasets:
-            logging.info(f"Loading dataset: {dataset}")
-            is_mini_batch = get_is_need_mini_batch(dataset)
-            logging.info(f"Is mini batch: {is_mini_batch}")
+            # batch_size_list = get_batch_size_list(dataset)
+            # is_mini_batch = get_is_need_mini_batch(dataset)
+            batch_size_list = [128]
+            is_mini_batch = False
 
             data = load_full_dataset(dataset, True, True, True)
-            logging.info(data)
+            # logging.info(data)
             target_node_type = get_data_target_node_type(dataset)
             
-            num_classes = int(data[target_node_type].y.max().item() + 1)
+            for batch_size in batch_size_list:
+                ma_f1_list = []
+                mi_f1_list = []
+                print(f'Start train model: {model_type}, dataset: {dataset}, batch_size: {batch_size}')
+                logging.info(f"Loading dataset: {dataset}, mini batch: {is_mini_batch}, model: {model_type}, batch_size: {batch_size}")
+                for i in tqdm(range(10)):
+                    num_classes = int(data[target_node_type].y.max().item() + 1)
 
-            model = init_model(model_type, num_classes, data)
-            data, model = data.to(device), model.to(device)
+                    model = init_model(model_type, num_classes, data)
+                    data, model = data.to(device), model.to(device)
 
-            with torch.no_grad():  # Initialize lazy modules.                    
-                model(data.x_dict, data.edge_index_dict, target_node_type)
+                    with torch.no_grad():  # Initialize lazy modules.                    
+                        model(data.x_dict, data.edge_index_dict, target_node_type)
 
-            optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=0.001)
+                    optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=0.001)
 
-            epoch = 0
-            best_macri_fl = 0
-            start_patience = patience = 100
+                    epoch = 0
+                    best_macri_fl = 0
+                    start_patience = patience = 100
 
-            while True:
-                epoch += 1
-                loss = no_fed_train_nc(model, data, optimizer, target_node_type, is_mini_batch, device)
-                preds, labels = no_fed_test_nc(model, data, target_node_type, is_mini_batch, device)
+                    while True:
+                        epoch += 1
+                        loss = no_fed_train_nc(model, data, optimizer, target_node_type, is_mini_batch, batch_size, device)
+                        preds, labels = no_fed_test_nc(model, data, target_node_type, is_mini_batch, batch_size, device)
 
-                preds = preds.cpu().numpy()
-                labels = labels.cpu().numpy()
+                        preds = preds.cpu().numpy()
+                        labels = labels.cpu().numpy()
 
-                macro_f1 = f1_score(labels, preds, average='macro')
-                micro_f1 = f1_score(labels, preds, average='micro')
+                        macro_f1 = f1_score(labels, preds, average='macro')
+                        micro_f1 = f1_score(labels, preds, average='micro')
 
-                logging.info(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Macro F1: {macro_f1:.4f}, Micro F1: {micro_f1:.4f}')
+                        # logging.info(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Macro F1: {macro_f1:.4f}, Micro F1: {micro_f1:.4f}')
 
-                if best_macri_fl <= macro_f1:
-                    patience = start_patience
-                    best_macri_fl = macro_f1
-                else:
-                    patience -= 1
+                        if best_macri_fl <= macro_f1:
+                            patience = start_patience
+                            best_macri_fl = macro_f1
+                        else:
+                            patience -= 1
 
-                if patience <= 0:
-                    print('Stopping training as validation accuracy did not improve '
-                        f'for {start_patience} epochs')
-                    break
+                        if patience <= 0:
+                            print('Stopping training as validation accuracy did not improve '
+                                f'for {start_patience} epochs')
+                            break
 
-            logging.info(f'DataSet: {dataset}, Model: {model_type}, Loss: {loss}, Macro F1: {macro_f1:.4f}, Micro F1: {micro_f1:.4f}, Epochs: {epoch}')
+                    logging.info(f'Index: {i}, DataSet: {dataset}, Model: {model_type}, Loss: {loss}, Macro F1: {macro_f1:.4f}, Micro F1: {micro_f1:.4f}, Epochs: {epoch}')
+                    ma_f1_list.append(macro_f1)
+                    mi_f1_list.append(micro_f1)
+                    
+                    show_model(model)
+                    
+                avg_ma_f1 = np.mean(ma_f1_list)
+                avg_mi_f1 = np.mean(mi_f1_list)
+                logging.info(f'DataSet: {dataset}, Model: {model_type}, Avg Macro F1: {avg_ma_f1:.4f}, Avg Micro F1: {avg_mi_f1:.4f}')

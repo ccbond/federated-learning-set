@@ -169,9 +169,9 @@ def get_data_target_node_type(dataset: str):
 
 def get_is_need_mini_batch(dataset: str):
     if dataset == "DBLP":
-        return False
+        return True
     elif dataset == "IMDB":
-        return False
+        return True
     elif dataset == "OGB_MAG":
         return True
     elif dataset == "AMiner":
@@ -184,3 +184,13 @@ def get_is_need_mini_batch(dataset: str):
         return True 
     else:
         return False
+
+def get_batch_size_list(dataset: str):
+    if dataset == "ACM":
+        return [300, 184, 92]
+    elif dataset == "DBLP":
+        return [40, 90, 150]
+    elif dataset == "IMDB":
+        return [140, 40, 90]
+    else:
+        return [128]

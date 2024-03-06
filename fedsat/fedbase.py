@@ -19,7 +19,6 @@ class BasicServer:
         self.model_state_dict_keys = model.get_state_dict_keys()
         self.clients = clients
         self.num_clients = len(clients)
-        self.num_rounds = option['num_rounds']
         self.decay_rate= option['learning_rate']
         self.current_round = -1
         self.option = option
@@ -37,12 +36,15 @@ class BasicServer:
             ) 
  
     def run(self):        
-        logging.info(f"Total Time Cost")
+        # logging.info(f"Total Time Cost")
         total_start_time = time.time()
-        for round in range(self.num_rounds + 1):
+
+        start_patience = patience = 100
+        best_macro_f1 = 0
+        
+        while True:
             self.current_round = round
-            logging.info(f"-----------------Round {round}---------------")
-            iter_start_time = time.time()
+            # iter_start_time = time.time()
             # federated train
             self.iterate()
             # decay learning rate
@@ -50,7 +52,7 @@ class BasicServer:
             # update client model
             self.update_clients()
             
-            iter_end_time = time.time()
+            # iter_end_time = time.time()
             preds, labels = self.test()
 
             preds = preds.cpu().numpy()
@@ -58,14 +60,24 @@ class BasicServer:
 
             macro_f1 = f1_score(labels, preds, average='macro')
             micro_f1 = f1_score(labels, preds, average='micro')
+            
+            if best_macro_f1 <= macro_f1:
+                patience = start_patience
+                best_macro_f1 = macro_f1
+            else: 
+                patience -= 1
+                
+            if patience <= 0:
+                print('Stopping training as validation accuracy did not improve '
+                    f'for {start_patience} epochs')
+                break
 
-            logging.info(f'Epoch: {round:03d}, Macro F1: {macro_f1:.4f}, Micro F1: {micro_f1:.4f}')
-            logging.info(f"Time cost for round {round}: {iter_end_time - iter_start_time}")
+            # logging.info(f'Epoch: {round:03d}, Macro F1: {macro_f1:.4f}, Micro F1: {micro_f1:.4f}')
+            # logging.info(f"Time cost for round {round}: {iter_end_time - iter_start_time}")
         
         total_end_time = time.time()
-        logging.info("=================END================")
-        logging.info('Total time cost: {}'.format(total_end_time - total_start_time))
-        return
+        total_time_cost = total_end_time - total_start_time
+        return total_time_cost, macro_f1, micro_f1
 
     def get_agg_model_tensor(self):
         return fmodule.model_to_tensor(self.model)
@@ -153,7 +165,7 @@ class BasicClient():
         self.optimizer = optimizer
 
     def train(self, model):
-        print('train')
+        # print('train')
         model.train()
         optimizer = self.optimizer
         

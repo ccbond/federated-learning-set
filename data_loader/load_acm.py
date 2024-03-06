@@ -40,7 +40,6 @@ def load_acm_data():
         data['paper'].x = torch.FloatTensor(p_vs_t.toarray())
         data['paper'].y = labels
         
-        
         data['paper', 'writes', 'author'].edge_index = torch.tensor(np.vstack(p_vs_a.nonzero()), dtype=torch.long)
         data['author', 'written_by', 'paper'].edge_index = torch.tensor(np.vstack(p_vs_a.transpose().nonzero()), dtype=torch.long)
         data['paper', 'has_subject', 'subject'].edge_index = torch.tensor(np.vstack(p_vs_l.nonzero()), dtype=torch.long)
@@ -64,6 +63,9 @@ def load_acm_data():
         
         metapaths = [[('paper', 'author'), ('author', 'paper')],[('paper', 'subject'), ('subject', 'paper')]]
         data = AddMetaPaths(metapaths=metapaths, drop_orig_edge_types=True, add_zero_features=True, drop_unconnected_node_types=True)(data)
+
+        data['author'].num_nodes = p_vs_a.shape[1]
+        data['subject'].num_nodes = p_vs_l.shape[1]
 
         return data
 

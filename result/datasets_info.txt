@@ -84,3 +84,121 @@ Number of testing nodes: 3478
 
 
 
+Dataset: ACM
+HeteroData(
+  metapath_dict={
+    (paper, metapath_0, paper)=[2],
+    (paper, metapath_1, paper)=[2],
+  },
+  paper={
+    x=[4025, 1903],
+    y=[4025],
+    train_mask=[4025],
+    val_mask=[4025],
+    test_mask=[4025],
+  },
+  (paper, metapath_0, paper)={ edge_index=[2, 57853] },
+  (paper, metapath_1, paper)={ edge_index=[2, 4350031] }
+)
+Target node type: paper
+Number of classes: 3
+Number of training nodes: 808
+Number of testing nodes: 2816
+
+
+
+Dataset: ACM
+HeteroData(
+  metapath_dict={
+    (paper, metapath_0, paper)=[2],
+    (paper, metapath_1, paper)=[2],
+  },
+  paper={
+    x=[4025, 1903],
+    y=[4025],
+    train_mask=[4025],
+    val_mask=[4025],
+    test_mask=[4025],
+  },
+  (paper, metapath_0, paper)={ edge_index=[2, 57853] },
+  (paper, metapath_1, paper)={ edge_index=[2, 4350031] }
+)
+Target node type: paper
+Number of classes: 3
+Number of training nodes: 808
+Number of testing nodes: 2816
+
+
+
+Dataset: ACM
+HeteroData(
+  metapath_dict={
+    (paper, metapath_0, paper)=[2],
+    (paper, metapath_1, paper)=[2],
+  },
+  paper={
+    x=[4025, 1903],
+    y=[4025],
+    train_mask=[4025],
+    val_mask=[4025],
+    test_mask=[4025],
+  },
+  (paper, metapath_0, paper)={ edge_index=[2, 57853] },
+  (paper, metapath_1, paper)={ edge_index=[2, 4350031] }
+)
+Target node type: paper
+Number of classes: 3
+Number of training nodes: 808
+Number of testing nodes: 2816
+
+
+
+Dataset: ACM
+HeteroData(
+  metapath_dict={
+    (paper, metapath_0, paper)=[2],
+    (paper, metapath_1, paper)=[2],
+  },
+  paper={
+    x=[4025, 1903],
+    y=[4025],
+    train_mask=[4025],
+    val_mask=[4025],
+    test_mask=[4025],
+  },
+  author={},
+  (paper, metapath_0, paper)={ edge_index=[2, 57853] },
+  (paper, metapath_1, paper)={ edge_index=[2, 4350031] }
+)
+Target node type: paper
+Number of classes: 3
+Number of training nodes: 808
+Number of testing nodes: 2816
+
+
+
+Dataset: ACM
+HeteroData(
+  metapath_dict={
+    (paper, metapath_0, paper)=[2],
+    (paper, metapath_1, paper)=[2],
+  },
+  paper={
+    x=[4025, 1903],
+    y=[4025],
+    train_mask=[4025],
+    val_mask=[4025],
+    test_mask=[4025],
+  },
+  author={ num_nodes=17431 },
+  subject={ num_nodes=73 },
+  (paper, metapath_0, paper)={ edge_index=[2, 57853] },
+  (paper, metapath_1, paper)={ edge_index=[2, 4350031] }
+)
+Target node type: paper
+Number of classes: 3
+Number of training nodes: 808
+Number of testing nodes: 2816
+
+
+

@@ -22,6 +22,7 @@ def show_model_info(model_name: str, dataset_name: str):
             num_classes = data[target_node_type].y.max().item() + 1
 
             model = init_model(model_type, num_classes, data)
+            model.train()
             
             print("model state_dict:")
             
@@ -29,18 +30,36 @@ def show_model_info(model_name: str, dataset_name: str):
             #     print(param_tensor, "\t", model.state_dict()[param_tensor])
 
 
-        for name, param in model.named_parameters():
-            if param.is_leaf and param.requires_grad:
-                # 参数已初始化并准备好训练
-                print(name, "=>", param.shape)
-            else:
-                # 参数未初始化
-                print(name, "=> Uninitialized")
-                # print(key, "=>", model.state_dict()[key].shape)
-                
-        print("model parameters:")
-        for param in model.parameters():
-            print(param)
+            for name, param in model.named_parameters():
+                if param.is_leaf and param.requires_grad:
+                    # 参数已初始化并准备好训练
+                    print(name, "=>", param.shape)
+                else:
+                    # 参数未初始化
+                    print(name, "=> Uninitialized")
+                    # print(key, "=>", model.state_dict()[key].shape)
+                    
+            print("model parameters:")
+            for param in model.parameters():
+                print(param)
 
-        print("model state dict list:")
-        print(model.get_state_dict_keys())
+            print("model state dict list:")
+            print(model.get_state_dict_keys())
+
+
+def show_model(model):
+    for name, param in model.named_parameters():
+        if param.is_leaf and param.requires_grad:
+            # 参数已初始化并准备好训练
+            print(name, "=>", param.shape)
+        else:
+            # 参数未初始化
+            print(name, "=> Uninitialized")
+            # print(key, "=>", model.state_dict()[key].shape)
+            
+    print("model parameters:")
+    for param in model.parameters():
+        print(param)
+
+    print("model state dict list:")
+    print(model.get_state_dict_keys())
