@@ -470,3 +470,18 @@ def get_device():
     while True:
         yield dev_list[crt_dev]
         crt_dev = (crt_dev+1)%len(dev_list)
+
+def deep_copy_complex_structure(input_dict):
+    copied_dict = {}
+    for key, value in input_dict.items():
+        if isinstance(value, torch.Tensor):
+            # 对于PyTorch张量，使用.clone().detach()进行复制
+            # 并确保复制后的张量不会有梯度
+            copied_dict[key] = value.clone().detach().requires_grad_(value.requires_grad)
+        elif isinstance(value, dict):
+            # 如果值是字典，递归调用自身进行深复制
+            copied_dict[key] = deep_copy_complex_structure(value)
+        else:
+            # 对于其他类型，使用copy.deepcopy
+            copied_dict[key] = copy.deepcopy(value)
+    return copied_dict

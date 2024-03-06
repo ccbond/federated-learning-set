@@ -20,6 +20,7 @@ def init_model(model_type, num_classes, graph):
         return model
     elif model_type == 'hansa':
         model = HANSA(-1, num_classes, metadata=graph.metadata())
+        return model
     else:
         logging.info("Model not found.")
         return None

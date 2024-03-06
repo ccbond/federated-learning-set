@@ -132,7 +132,7 @@ class BasicServer:
     def test(self):
         self.model.eval()
         mask = self.data[self.target_node_type].test_mask
-        out, _ = self.model(self.data.x_dict, self.data.edge_index_dict, self.target_node_type)
+        out, _, _ = self.model(self.data.x_dict, self.data.edge_index_dict, self.target_node_type)
         preds = out[mask].argmax(dim=-1)
         labels = self.data[self.target_node_type].y[mask]
         return preds, labels

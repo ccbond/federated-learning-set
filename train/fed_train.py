@@ -14,7 +14,7 @@ def fed_node_classification(model_name: str, data_type: str, federated_type: str
             num_classes = data[target_node_type].y.max().item() + 1
             batch_size_list = get_batch_size_list(dataset_name)
             
-            if model_name == 'han':
+            if model_name == 'han' or model_name == 'hansa':
                 for batch_size in batch_size_list:
                     logging.info(f"Start init server: {model_name} on {dataset_name} with {federated_type}, batch_size: {batch_size}")
                     # logging.info(server)
@@ -32,3 +32,4 @@ def fed_node_classification(model_name: str, data_type: str, federated_type: str
                         micro_f1_list.append(micro_f1)
                         
                     logging.info(f"Dataset: {dataset_name}, model: {federated_type+model_name},Average Macro F1: {sum(macro_f1_list)/10:.4f}, Average Micro F1: {sum(micro_f1_list)/10:.4f}")
+        

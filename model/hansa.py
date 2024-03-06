@@ -22,24 +22,31 @@ class HANSA(nn.Module):
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.metadata = metadata
-        self.now_atte = None
         
 
     def forward(self, x_dict, edge_index_dict, labeled_class, is_return_atte=False, share_atte=None):
         if labeled_class not in x_dict or x_dict[labeled_class] is None:
             return torch.tensor([]), False
         
+        now_atte = {}
+        
         for i, conv in enumerate(self.convs):
             if labeled_class not in x_dict or x_dict[labeled_class] is None:
-                return torch.tensor([]), False
+                return torch.tensor([]), False, None
             if is_return_atte:
-                x_dict, atte = conv(x_dict, edge_index_dict, return_semantic_attention_weights=True, share_atte=share_atte[i])
-                self.set_now_share_atte(i, atte)
+                if share_atte is None:
+                    x_dict, atte = conv(x_dict, edge_index_dict, return_semantic_attention_weights=True, share_atte=None)
+                else:
+                    x_dict, atte = conv(x_dict, edge_index_dict, return_semantic_attention_weights=True, share_atte=share_atte[i])
+                now_atte[i] = atte
             else:
-                x_dict = conv(x_dict, edge_index_dict, return_semantic_attention_weights=False, share_atte=share_atte[i])
+                if share_atte is None:
+                    x_dict = conv(x_dict, edge_index_dict, return_semantic_attention_weights=False)
+                else:
+                    x_dict = conv(x_dict, edge_index_dict, return_semantic_attention_weights=False, share_atte=share_atte[i])
 
         x_dict = self.lin(x_dict[labeled_class])
-        return x_dict, True
+        return x_dict, True, now_atte
  
     def get_in_channels(self):
         return self.in_channels
@@ -52,10 +59,3 @@ class HANSA(nn.Module):
     
     def get_state_dict_keys(self):
         return list(self.state_dict().keys())
-
-    def set_now_share_atte(self,i, atte):
-        self.now_atte[i] = atte
-        return
-        
-    def get_now_atte(self):
-        return self.now_atte
