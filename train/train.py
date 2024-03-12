@@ -4,6 +4,7 @@ from typing import List
 import torch
 import torch.nn.functional as F
 from torch_geometric.loader import NeighborLoader
+from itertools import islice
 
 def full_train_nc(model, data, optimizer, target_node_type, device) -> float:
     model.train()
@@ -40,6 +41,32 @@ def mini_batch_train_nc(model, train_loader, optimizer, target_node_type, device
         batch_size = mask.sum().item()
         total_examples += batch_size
         total_loss += float(loss) * batch_size
+        # break
+
+    return total_loss / total_examples
+
+def select_one_mini_batch_train_nc(model, train_loader, optimizer, target_node_type, device) -> float:
+    model.train()
+
+    total_examples = 0
+    total_loss = 0
+
+    batch = None
+    for b in train_loader:
+        batch = b
+    
+    optimizer.zero_grad()
+    batch = batch.to(device)
+    out, _ = model(batch.x_dict, batch.edge_index_dict, target_node_type)
+    
+    mask = batch[target_node_type].train_mask
+    loss = F.cross_entropy(out[mask], batch[target_node_type].y[mask])
+    loss.backward()
+    optimizer.step()
+
+    batch_size = mask.sum().item()
+    total_examples += batch_size
+    total_loss += float(loss) * batch_size
 
     return total_loss / total_examples
 
@@ -86,6 +113,16 @@ def no_fed_train_nc(model, data, optimizer, target_node_type, is_mini_batch, bat
         # logging.info("The number of clients: %d", len(train_loader))
         
         return mini_batch_train_nc(model, train_loader, optimizer, target_node_type, device)
+    else:
+        return full_train_nc(model, data, optimizer, target_node_type, device)
+    
+def select_last_batch_fed_train_nc(model, data, optimizer, target_node_type, is_mini_batch, batch_size, device) -> float:
+    if is_mini_batch:
+        train_idx = data[target_node_type].train_mask.nonzero(as_tuple=True)[0]
+        train_loader = NeighborLoader(data, num_neighbors=[32]*3, input_nodes=(target_node_type, train_idx), batch_size=batch_size, shuffle=False)
+        # logging.info("The number of clients: %d", len(train_loader))
+        
+        return select_one_mini_batch_train_nc(model, train_loader, optimizer, target_node_type, device)
     else:
         return full_train_nc(model, data, optimizer, target_node_type, device)
 

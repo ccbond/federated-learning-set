@@ -24,13 +24,16 @@ def group(
         out = torch.stack(xs)
         if out.numel() == 0:
             return out.view(0, out.size(-1)), None
+
+        attn_score = (q * torch.tanh(k_lin(out)).mean(1)).sum(-1)
+        new_attn = F.softmax(attn_score, dim=0)
         
         if attn is None:
-            attn_score = (q * torch.tanh(k_lin(out)).mean(1)).sum(-1)
-            attn = F.softmax(attn_score, dim=0)
-
-        out = torch.sum(attn.view(num_edge_types, 1, -1) * out, dim=0)
-        return out, attn
+            out = torch.sum(new_attn.view(num_edge_types, 1, -1) * out, dim=0)
+        else:
+            out = torch.sum(attn.view(num_edge_types, 1, -1) * out, dim=0)
+        
+        return out, new_attn
 
 
 class HANSAConv(MessagePassing):

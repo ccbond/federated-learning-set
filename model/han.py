@@ -30,7 +30,7 @@ class HAN(nn.Module):
         for _, conv in enumerate(self.convs):
             if labeled_class not in x_dict or x_dict[labeled_class] is None:
                 return torch.tensor([]), False
-            x_dict = conv(x_dict, edge_index_dict)
+            x_dict, atte  = conv(x_dict, edge_index_dict, True)
 
         x_dict = self.lin(x_dict[labeled_class])
         return x_dict, True

@@ -9,7 +9,7 @@ from model.hansaconv import HANSAConv
 
 class HANSA(nn.Module):
     def __init__(self, in_channels: Union[int, Dict[str, int]],
-                 out_channels: int, hidden_channels=16, heads=4, n_layers=1, metadata=None):
+                 out_channels: int, hidden_channels=16, heads=8, n_layers=1, metadata=None):
         super().__init__()
         self.convs = nn.ModuleList()
         self.relu = F.relu

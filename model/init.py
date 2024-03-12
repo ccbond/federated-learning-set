@@ -1,6 +1,7 @@
 import logging
 from model.han import HAN
 from model.hansa import HANSA
+from model.hgt import HGT
 
 
 def init_model(model_type, num_classes, graph):
@@ -18,9 +19,12 @@ def init_model(model_type, num_classes, graph):
     if model_type == 'han':
         model = HAN(-1, num_classes, metadata=graph.metadata())
         return model
-    elif model_type == 'hansa':
-        model = HANSA(-1, num_classes, metadata=graph.metadata())
+    elif model_type == 'hansa' or model_type == 'locsa':
+        model = HANSA(-1, 512, metadata=graph.metadata())
         return model
+    elif model_type == 'hgt':
+        model = HGT(num_classes, metadata=graph.metadata(), data=graph)
+        return model 
     else:
         logging.info("Model not found.")
         return None

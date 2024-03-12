@@ -42,7 +42,13 @@ class BasicServer:
         start_patience = patience = 100
         best_macro_f1 = 0
         
+        
+        epoch_start_time = time.time()            
+        epoch_end_time_data = []
+        
+        round = 0
         while True:
+            round += 1
             self.current_round = round
             # iter_start_time = time.time()
             # federated train
@@ -67,6 +73,11 @@ class BasicServer:
             else: 
                 patience -= 1
                 
+            epoch_end_time = time.time()
+            origin_time_interval = epoch_end_time - epoch_start_time
+            time_interval = "%.3f" % origin_time_interval
+            epoch_end_time_data.append(time_interval)
+                
             if patience <= 0:
                 print('Stopping training as validation accuracy did not improve '
                     f'for {start_patience} epochs')
@@ -77,7 +88,8 @@ class BasicServer:
         
         total_end_time = time.time()
         total_time_cost = total_end_time - total_start_time
-        return total_time_cost, macro_f1, micro_f1
+        
+        return total_time_cost, epoch_end_time_data, macro_f1, micro_f1
 
     def get_agg_model_tensor(self):
         return fmodule.model_to_tensor(self.model)
@@ -132,7 +144,7 @@ class BasicServer:
     def test(self):
         self.model.eval()
         mask = self.data[self.target_node_type].test_mask
-        out, _, _ = self.model(self.data.x_dict, self.data.edge_index_dict, self.target_node_type)
+        out, _ = self.model(self.data.x_dict, self.data.edge_index_dict, self.target_node_type)
         preds = out[mask].argmax(dim=-1)
         labels = self.data[self.target_node_type].y[mask]
         return preds, labels
@@ -211,3 +223,6 @@ class BasicClient():
 
     def set_model(self, model):
         self.model_example = model
+
+    def get_model(self):
+        return self.model_example

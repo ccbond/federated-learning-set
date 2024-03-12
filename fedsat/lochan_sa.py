@@ -10,9 +10,9 @@ import torch.nn.functional as F
 
 from .fedbase import BasicServer, BasicClient
 
-class FedAvgWithShareAttentionServer(BasicServer):
+class LocalWithShareAttentionServer(BasicServer):
     def __init__(self, option, model, clients, data = None, target_node_type = None, device = None):
-        super(FedAvgWithShareAttentionServer, self).__init__(option, model, clients, data, target_node_type, device)
+        super(LocalWithShareAttentionServer, self).__init__(option, model, clients, data, target_node_type, device)
 
         self.share_atte = None
 
@@ -22,8 +22,10 @@ class FedAvgWithShareAttentionServer(BasicServer):
 
         start_patience = patience = 200
         best_macro_f1 = 0
+        
 
         epoch_start_time = time.time()
+        
         epoch_end_time_data = []
         
         round = 0
@@ -52,11 +54,9 @@ class FedAvgWithShareAttentionServer(BasicServer):
                 best_macro_f1 = macro_f1
             else: 
                 patience -= 1
-
+                
             epoch_end_time = time.time()
-        
             origin_time_interval = epoch_end_time - epoch_start_time
-
             time_interval = "%.3f" % origin_time_interval
             epoch_end_time_data.append(time_interval)
                 
@@ -74,16 +74,18 @@ class FedAvgWithShareAttentionServer(BasicServer):
 
     def iterate(self):
         model_tensor_dict, model_atte_dict = self.communicate(self.clients)
-        agg_model_tensor = self.aggregate(model_tensor_dict)
+        # agg_model_tensor = self.aggregate(model_tensor_dict)
         # print(f'model_atte_dict {model_atte_dict}')
         agg_model_atte = self.aggregate_attention(model_atte_dict)
         # print(f'agg_model_atte {agg_model_atte}')
 
         self.set_share_atte(agg_model_atte)
-        agg_model = copy.deepcopy(self.model)
-        state_dict_keys = agg_model.get_state_dict_keys()
-        agg_model = fmodule.model_from_flattened_tensor(agg_model_tensor, agg_model, state_dict_keys)  # Use agg_model instead of ms[0] for clarity
-        self.model = agg_model
+        # agg_model = copy.deepcopy(self.model)
+        # state_dict_keys = agg_model.get_state_dict_keys()
+        # agg_model = fmodule.model_from_flattened_tensor(agg_model_tensor, agg_model, state_dict_keys)  # Use agg_model instead of ms[0] for clarity
+        # self.model = agg_model
+        # print(self.clients)
+        self.model = self.clients['0'].get_model()
         return
 
     def communicate(self, clients):
@@ -143,9 +145,9 @@ class FedAvgWithShareAttentionServer(BasicServer):
         return preds, labels
     
 
-class FedAvgWithShareAttentionClient(BasicClient):
+class LocalWithShareAttentionClient(BasicClient):
     def __init__(self, option, name='', train_data=None, model=None, optimizer=None, device=None):
-        super(FedAvgWithShareAttentionClient, self).__init__(option, name, train_data, model, optimizer, device)
+        super(LocalWithShareAttentionClient, self).__init__(option, name, train_data, model, optimizer, device)
         
         self.now_atte = None
         
@@ -167,6 +169,7 @@ class FedAvgWithShareAttentionClient(BasicClient):
     def reply2(self, share_atte):
         model = self.model_example.to(self.device)
         loss, model = self.train(model, share_atte)
+        self.set_model(model)
         return model, loss
     
     def set_now_atte(self, now_atte):

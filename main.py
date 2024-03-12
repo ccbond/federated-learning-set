@@ -6,9 +6,8 @@ import logging
 import datetime
 from model.show import show_model_info
 from train.fed_train import fed_node_classification
-from train.not_fed_train import no_fed_node_classification
+from train.not_fed_train import no_fed_node_classification, no_fed_node_classification_select_one
 from tools.show_and_store_dataset_info import show_and_store_dataset_info
-
 
 # Set log config
 now = datetime.datetime.now()
@@ -30,6 +29,12 @@ def nofed(model, dataset):
     no_fed_node_classification(model, dataset)
     print("No fed run finish.")    
 
+@click.command()
+@click.option('--model', default="han", help='The model name')
+@click.option('--dataset', default="DBLP", help='The dataset name')
+def nofed_s1(model, dataset):
+    no_fed_node_classification_select_one(model, dataset)
+    print("No fed run finish.")    
 
 @click.command()
 @click.option('--model', default="han", help='The model name')
@@ -60,6 +65,7 @@ cli.add_command(get_datasets)
 cli.add_command(nofed)
 cli.add_command(fed)
 cli.add_command(show_model)
+cli.add_command(nofed_s1)
 
 
 if __name__ == '__main__':

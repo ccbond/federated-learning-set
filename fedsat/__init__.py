@@ -5,6 +5,8 @@ import torch
 import torch.nn.functional as F
 
 from fedsat.fedavg_sa import FedAvgWithShareAttentionClient, FedAvgWithShareAttentionServer
+from fedsat.lochan import LocalClient, LocalServer
+from fedsat.lochan_sa import LocalWithShareAttentionClient, LocalWithShareAttentionServer
 
 
 def init_server(fed_method, model, data, target_node_type, batch_size, device): 
@@ -15,8 +17,6 @@ def init_server(fed_method, model, data, target_node_type, batch_size, device):
     for data in train_loader:
         data_list.append(data)
     num_clients = len(data_list)
-    
-    # logging.info("The number of clients: %d", num_clients)
 
     lr = 0.005
     weight_decay = 0.001
@@ -45,6 +45,28 @@ def init_server(fed_method, model, data, target_node_type, batch_size, device):
 
         server_option = {'num_rounds': 500, 'learning_rate': 0.005}
         server = FedAvgWithShareAttentionServer(option=server_option, model=model, clients=clients, data=data, target_node_type=target_node_type, device=device)
+        return server
+
+    elif fed_method == 'loc_sa':
+        clients = {}
+        for i in range(num_clients):
+            idx = str(i)
+            client = LocalWithShareAttentionClient(option=client_option, name=idx, train_data=data_list[i], model=model, optimizer=optimizer, device=device)
+            clients[idx] = client
+
+        server_option = {'num_rounds': 500, 'learning_rate': 0.005}
+        server = LocalWithShareAttentionServer(option=server_option, model=model, clients=clients, data=data, target_node_type=target_node_type, device=device)
+        return server
+
+    elif fed_method == 'loc':
+        clients = {}
+        for i in range(num_clients):
+            idx = str(i)
+            client = LocalClient(option=client_option, name=idx, train_data=data_list[i], model=model, optimizer=optimizer, device=device)
+            clients[idx] = client
+
+        server_option = {'num_rounds': 500, 'learning_rate': 0.005}
+        server = LocalServer(option=server_option, model=model, clients=clients, data=data, target_node_type=target_node_type, device=device)
         return server
 
     else:
